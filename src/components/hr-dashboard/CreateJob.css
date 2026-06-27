@@ -1,0 +1,272 @@
+/* ===========================
+   Create Job Page
+=========================== */
+
+.create-job-page {
+  flex: 1;
+  padding: 32px;
+  background: #f6f8fc;
+  min-height: 100vh;
+}
+
+.create-job-header h1 {
+  font-size: 2rem;
+  color: #003566;
+  margin-bottom: 6px;
+}
+
+.create-job-header p {
+  color: #667085;
+  margin-bottom: 24px;
+}
+
+.create-job-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 30px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  max-width: 950px;
+  width: 100%;
+}
+
+.create-job-card h2 {
+  color: #003566;
+  margin-bottom: 18px;
+}
+
+/* ===========================
+   Inputs
+=========================== */
+
+.create-job-card input,
+.create-job-card textarea,
+.create-job-card select {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #d8dde8;
+  border-radius: 10px;
+  font-size: 15px;
+  outline: none;
+  transition: 0.25s;
+  margin-bottom: 18px;
+  background: #fff;
+}
+
+.create-job-card input:focus,
+.create-job-card textarea:focus,
+.create-job-card select:focus {
+  border-color: #2abcb2;
+  box-shadow: 0 0 0 3px rgba(42, 188, 178, 0.15);
+}
+
+.create-job-card textarea {
+  resize: vertical;
+  min-height: 140px;
+}
+
+/* ===========================
+   Labels
+=========================== */
+
+.create-job-card label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #344054;
+}
+
+/* ===========================
+   Grid
+=========================== */
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+/* ===========================
+   Skills
+=========================== */
+
+.skills-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.skill-btn {
+  border: 1px solid #d6dbe5;
+  background: white;
+  color: #003566;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: 0.25s;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.skill-btn:hover {
+  background: #eefbfa;
+  border-color: #2abcb2;
+}
+
+.skill-btn.selected {
+  background: #2abcb2;
+  color: white;
+  border-color: #2abcb2;
+}
+
+/* ===========================
+   Track Badge
+=========================== */
+
+.track-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #003566;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+/* ===========================
+   Button
+=========================== */
+
+.create-job-btn {
+  width: 100%;
+  margin-top: 25px;
+  background: #003566;
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  transition: 0.25s;
+}
+
+.create-job-btn:hover {
+  background: #004b8d;
+}
+
+.create-job-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===========================
+   Error
+=========================== */
+
+.form-error {
+  color: #e53935;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+/* ===========================
+   Success
+=========================== */
+
+.form-success {
+  color: #16a34a;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+/* ===========================
+   Responsive
+=========================== */
+
+@media (max-width: 992px) {
+  .create-job-page {
+    padding: 20px;
+  }
+
+  .create-job-card {
+    padding: 22px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .create-job-page {
+    padding: 15px;
+  }
+
+  .create-job-header h1 {
+    font-size: 1.6rem;
+  }
+
+  .create-job-card {
+    padding: 18px;
+    border-radius: 14px;
+  }
+
+  .create-job-card input,
+  .create-job-card textarea,
+  .create-job-card select {
+    font-size: 14px;
+  }
+
+  .skill-btn {
+    font-size: 13px;
+    padding: 7px 12px;
+  }
+
+  .create-job-btn {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .create-job-page {
+    padding: 12px;
+  }
+
+  .create-job-card {
+    padding: 15px;
+  }
+
+  .skills-container {
+    gap: 8px;
+  }
+
+  .skill-btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .create-job-btn {
+    width: 100%;
+  }
+}
+.candidate-main.create-job-page {
+  padding-top: 20px !important;
+}
+
+.create-job-header {
+  margin-bottom: 20px !important;
+}
+
+.candidate-view {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.create-job-card {
+  margin-top: 0 !important;
+}

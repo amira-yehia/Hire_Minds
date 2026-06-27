@@ -1,0 +1,320 @@
+/* ============================================================
+   HR PROFILE — uses the site's existing CSS variables
+   ============================================================ */
+
+/* ── Avatar ─────────────────────────────────────────── */
+.hr-avatar-wrap {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.hr-avatar-wrap .candidate-avatar {
+  width: 80px;
+  height: 80px;
+  min-width: 80px;
+  min-height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--hm-teal), var(--hm-teal-dark));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  flex-shrink: 0;
+  box-shadow: 0 12px 28px rgba(42, 188, 178, 0.32);
+  position: relative;
+}
+
+.hr-avatar-wrap .candidate-avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 50%;
+  display: block;
+}
+
+/* ── Profile Header Row ─────────────────────────────── */
+.hr-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 0 18px;
+  border-bottom: 1px solid var(--hm-border);
+  margin-bottom: 20px;
+}
+
+.hr-profile-identity h3 {
+  margin: 0 0 3px;
+  color: var(--hm-navy);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.hr-profile-identity .hr-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(42, 188, 178, 0.12);
+  color: var(--hm-teal-dark);
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.hr-profile-identity .hr-email {
+  display: block;
+  color: var(--hm-muted);
+  font-size: 13px;
+}
+
+/* ── Section Label ──────────────────────────────────── */
+.hr-section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: var(--hm-navy);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.hr-section-label i {
+  color: var(--hm-teal-dark);
+  font-size: 15px;
+}
+
+/* ── Info Chips (view mode) ─────────────────────────── */
+.hr-info-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.hr-info-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  border: 1px solid var(--hm-border);
+  color: #344054;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.hr-info-chip i {
+  color: var(--hm-teal-dark);
+  font-size: 14px;
+}
+
+/* ── Form Inputs (edit mode) ────────────────────────── */
+.hr-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.hr-form-grid .hr-full-col {
+  grid-column: 1 / -1;
+}
+
+.hr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.hr-field label {
+  color: var(--hm-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.hr-field input {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px;
+  border: 1.5px solid var(--hm-border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--hm-text);
+  font-size: 14px;
+  font-family: var(--hm-font);
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.hr-field input:focus {
+  border-color: var(--hm-teal);
+  box-shadow: 0 0 0 3px rgba(42, 188, 178, 0.14);
+}
+
+.hr-field input::placeholder {
+  color: #aab0bb;
+}
+
+/* ── Change Photo Button ────────────────────────────── */
+.hr-photo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  height: 40px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  border: 1.5px dashed var(--hm-teal);
+  background: rgba(42, 188, 178, 0.06);
+  color: var(--hm-teal-dark);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.hr-photo-btn:hover {
+  background: rgba(42, 188, 178, 0.13);
+}
+
+/* ── Action Buttons ─────────────────────────────────── */
+.hr-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.hr-btn-primary {
+  flex: 1;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--hm-teal), var(--hm-teal-dark));
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(42, 188, 178, 0.28);
+  transition: transform 0.18s, box-shadow 0.18s;
+  font-family: var(--hm-font);
+}
+
+.hr-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(42, 188, 178, 0.35);
+}
+
+.hr-btn-secondary {
+  flex: 1;
+  height: 44px;
+  border: 1.5px solid var(--hm-border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--hm-navy);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+  font-family: var(--hm-font);
+}
+
+.hr-btn-secondary:hover {
+  border-color: #c0c8d4;
+  background: #f8fafc;
+}
+
+.hr-btn-danger {
+  flex: 1;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  color: #dc2626;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.18s;
+  font-family: var(--hm-font);
+}
+
+.hr-btn-danger:hover {
+  background: #fee2e2;
+}
+
+.hr-btn-edit {
+  width: 100%;
+  height: 44px;
+  margin-top: 4px;
+  border: 1.5px solid var(--hm-border);
+  border-radius: 12px;
+  background: #f8fafc;
+  color: var(--hm-navy);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.18s, border-color 0.18s;
+  font-family: var(--hm-font);
+}
+
+.hr-btn-edit:hover {
+  background: #eef2f7;
+  border-color: #c8d0dc;
+}
+
+/* ── Company Card ───────────────────────────────────── */
+.hr-company-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--hm-navy), var(--hm-blue));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+  flex-shrink: 0;
+  box-shadow: 0 8px 18px rgba(15, 31, 61, 0.18);
+}
+
+.hr-company-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--hm-border);
+}
+
+.hr-company-row h3 {
+  margin: 0 0 3px;
+  color: var(--hm-navy);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.hr-company-row p {
+  margin: 0;
+  color: var(--hm-muted);
+  font-size: 13px;
+}
