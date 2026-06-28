@@ -31,13 +31,21 @@ export default function CandidateDashboard() {
   const skills = user?.skills ?? [];
   console.log(user);
   console.log(user?.cvUrl);
+  // const progress = {
+  //   cvUploaded:
+  //     localStorage.getItem(`cv-done-${userId}`) === "true" || !!user?.cvUrl,
+
+  //   assessmentCompleted: localStorage.getItem("assessmentCompleted") === "true",
+
+  //   interviewCompleted: localStorage.getItem("interviewCompleted") === "true",
+  // };
   const progress = {
-    cvUploaded:
-      localStorage.getItem(`cv-done-${userId}`) === "true" || !!user?.cvUrl,
+    cvUploaded: localStorage.getItem(`cv-done-${userId}`) === "true",
 
-    assessmentCompleted: localStorage.getItem("assessmentCompleted") === "true",
+    assessmentCompleted:
+      localStorage.getItem(`assessment-${userId}`) === "true",
 
-    interviewCompleted: localStorage.getItem("interviewCompleted") === "true",
+    interviewCompleted: localStorage.getItem(`interview-${userId}`) === "true",
   };
   if (loading) {
     return (

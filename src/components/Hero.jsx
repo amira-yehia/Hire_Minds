@@ -26,13 +26,14 @@ const Hero = () => {
         </h1>
 
         <p className="hero-description">
-          Automate technical hiring with AI-driven CV analysis, intelligent interviews,
-          and secure code assessments. Let only the best candidates reach your desk.
+          Automate technical hiring with AI-driven CV analysis, intelligent
+          interviews, and secure code assessments. Let only the best candidates
+          reach your desk.
         </p>
 
         <div className="hero-buttons">
           <button className="btn-outline" onClick={() => navigate("/auth")}>
-            Start as Candidate <i className="bx bx-right-arrow-alt"></i>
+            Start <i className="bx bx-right-arrow-alt"></i>
           </button>
         </div>
 

@@ -11,7 +11,10 @@ export default function CandidateSidebar() {
     } catch (err) {
       console.error(err);
     } finally {
-      localStorage.clear();
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("role");
+      localStorage.removeItem("userId");
       navigate("/");
     }
   };

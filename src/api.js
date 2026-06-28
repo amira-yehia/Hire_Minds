@@ -359,12 +359,63 @@ export const faceAPI = {
   },
 };
 // ================================================================
-// INTERVIEW  →  /api/Interview
+// INTERVIEW  →  /api/Interview  (ASP.NET backend)
 // ================================================================
 export const interviewAPI = {
   getById: (id) => request("GET", `/api/Interview/interview/${id}`),
   getByApplicationId: (id) =>
     request("GET", `/api/Interview/interviewbyApplicationId/${id}`),
+};
+
+// ================================================================
+// AI INTERVIEWER  →  https://doaa-helmy-interviewer2.hf.space
+// ================================================================
+const AI_INTERVIEW_BASE_URL = "https://doaa-helmy-interviewer2.hf.space";
+const AI_INTERVIEW_WS_BASE = "wss://doaa-helmy-interviewer2.hf.space";
+
+export const aiInterviewAPI = {
+  /**
+   * Prepare a session before the candidate connects via WebSocket.
+   * Called once when the candidate clicks "Start Interview".
+   *
+   * @param {object} payload
+   * @param {string} payload.session_id   - UUID you generate on the frontend
+   * @param {string} payload.candidate_name
+   * @param {string} payload.job_role
+   * @param {string} payload.level        - "Junior" | "Mid" | "Senior"
+   * @param {number} payload.duration_limit - seconds (default 1800)
+   * @param {Array}  payload.questions    - [{ question, golden_answer, skill }]
+   */
+  prepare: async (payload) => {
+    const res = await fetch(`${AI_INTERVIEW_BASE_URL}/api/interview/prepare`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || "Failed to prepare interview session");
+    }
+    return res.json(); // { session_id, status, websocket_url, total_questions }
+  },
+
+  /** Build the full WebSocket URL from a session_id */
+  wsUrl: (sessionId) => `${AI_INTERVIEW_WS_BASE}/ws/interview/${sessionId}`,
+
+  /** Check session status (pending | active | completed) */
+  status: async (sessionId) => {
+    const res = await fetch(
+      `${AI_INTERVIEW_BASE_URL}/api/interview/${sessionId}/status`,
+    );
+    if (!res.ok) throw new Error("Session not found");
+    return res.json();
+  },
+
+  /** Health check */
+  health: async () => {
+    const res = await fetch(`${AI_INTERVIEW_BASE_URL}/health`);
+    return res.json();
+  },
 };
 
 // ================================================================
