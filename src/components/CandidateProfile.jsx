@@ -305,7 +305,7 @@ export default function CandidateProfile() {
             <h2>
               <i className="bx bx-file"></i> CV Upload
               {cvDone && (
-                <span style={{ color: "#16a34a", marginLeft: 8, fontSize: 14 }}>
+                <span style={{ color: "#14b8a6", marginLeft: 8, fontSize: 14 }}>
                   ✓ Uploaded
                 </span>
               )}
@@ -318,7 +318,7 @@ export default function CandidateProfile() {
                 // ── مرفوع خلاص ──
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <span
-                    style={{ color: "#16a34a", fontWeight: 600, fontSize: 14 }}
+                    style={{ color: "#14b8a6", fontWeight: 600, fontSize: 14 }}
                   >
                     <i className="bx bx-check-circle"></i> CV uploaded
                     successfully
@@ -399,7 +399,7 @@ export default function CandidateProfile() {
             <h2>
               <i className="bx bx-face"></i> Face Recognition
               {faceStep === "done" && (
-                <span style={{ color: "#16a34a", marginLeft: 8, fontSize: 14 }}>
+                <span style={{ color: "#14b8a6", marginLeft: 8, fontSize: 14 }}>
                   ✓ Enrolled
                 </span>
               )}
@@ -490,7 +490,7 @@ export default function CandidateProfile() {
                         fontWeight: 700,
                         background:
                           i < faceSamples.length
-                            ? "#16a34a"
+                            ? "#14b8a6"
                             : "var(--surface-2, #e5e7eb)",
                         color: i < faceSamples.length ? "#fff" : "#666",
                       }}
@@ -528,7 +528,7 @@ export default function CandidateProfile() {
 
             {faceStep === "done" && (
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ color: "#16a34a", fontWeight: 600 }}>
+                <span style={{ color: "#14b8a6", fontWeight: 600 }}>
                   <i className="bx bx-check-circle"></i> Face enrolled
                   successfully!
                 </span>

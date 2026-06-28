@@ -5492,3 +5492,14 @@ textarea:focus-visible {
   cursor: pointer;
   font-weight: 600;
 }
+
+/* .done {
+  background: #22c55e !important;
+  color: white !important;
+}
+
+.disabled {
+  background: #e5e7eb !important;
+  pointer-events: none;
+  opacity: 0.6;
+} */

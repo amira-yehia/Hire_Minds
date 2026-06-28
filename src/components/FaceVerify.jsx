@@ -86,7 +86,58 @@ export default function FaceVerify({
       0.9,
     );
   };
+  //   const handleVerify = async () => {
+  //     if (!videoRef.current || !canvasRef.current) return;
 
+  //     setStatus("capturing");
+
+  //     const video = videoRef.current;
+
+  //     const canvas = canvasRef.current;
+
+  //     canvas.width = video.videoWidth || 640;
+
+  //     canvas.height = video.videoHeight || 480;
+
+  //     canvas.getContext("2d").drawImage(video, 0, 0);
+
+  //     canvas.toBlob(
+  //       async (blob) => {
+  //         if (!blob) return;
+
+  //         const file = new File([blob], "face.jpg", {
+  //           type: "image/jpeg",
+  //         });
+
+  //         try {
+  //           // 1
+  //           const session = await faceAPI.enrollStart();
+
+  //           console.log(session);
+
+  //           // 2
+  //           await faceAPI.enrollFrame(session.sessionId, file);
+
+  //           // 3
+  //           const result = await faceAPI.verify(file);
+
+  //           console.log(result);
+
+  //           setStatus("success");
+
+  //           onVerified();
+  //         } catch (error) {
+  //           console.error(error);
+
+  //           setStatus("error");
+
+  //           setErrorMsg("Face verification failed");
+  //         }
+  //       },
+  //       "image/jpeg",
+  //       0.9,
+  //     );
+  //   };
   const isLoading = status === "loading" || status === "capturing";
 
   return (

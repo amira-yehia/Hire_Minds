@@ -7,7 +7,11 @@ export default function CandidateDashboard() {
   const { userId } = getSession();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  // const [progress, setProgress] = useState({
+  //   cvUploaded: false,
+  //   assessmentCompleted: false,
+  //   interviewCompleted: false,
+  // });
   useEffect(() => {
     if (!userId) {
       setLoading(false);
@@ -25,7 +29,16 @@ export default function CandidateDashboard() {
     user?.fullName?.split(" ")[0] || user?.firstName || "Candidate";
   const matchScore = user?.matchScore ?? 0;
   const skills = user?.skills ?? [];
+  console.log(user);
+  console.log(user?.cvUrl);
+  const progress = {
+    cvUploaded:
+      localStorage.getItem(`cv-done-${userId}`) === "true" || !!user?.cvUrl,
 
+    assessmentCompleted: localStorage.getItem("assessmentCompleted") === "true",
+
+    interviewCompleted: localStorage.getItem("interviewCompleted") === "true",
+  };
   if (loading) {
     return (
       <div className="candidate-shell">
@@ -61,10 +74,41 @@ export default function CandidateDashboard() {
             <div className="candidate-progress-track">
               {[
                 ["bx-check", "Profile", "Created", "done"],
-                ["bx-file", "CV", "Uploaded", user?.cvUrl ? "done" : ""],
-                ["bx-code-alt", "Code", "Assessment", "active"],
-                ["bx-message-square", "AI", "Interview", ""],
-                ["bx-time-five", "Final", "Review", ""],
+
+                [
+                  "bx-file",
+                  "CV",
+                  "Uploaded",
+                  progress.cvUploaded ? "done" : "",
+                ],
+
+                [
+                  "bx-code-alt",
+                  "Code",
+                  "Assessment",
+                  progress.assessmentCompleted ? "done" : "",
+                  // : progress.cvUploaded
+                  //   ? "active"
+                  //   : "",
+                ],
+
+                [
+                  "bx-message-square",
+                  "AI",
+                  "Interview",
+                  progress.interviewCompleted
+                    ? "done"
+                    : progress.assessmentCompleted
+                      ? "active"
+                      : "",
+                ],
+
+                [
+                  "bx-time-five",
+                  "Final",
+                  "Review",
+                  progress.interviewCompleted ? "active" : "",
+                ],
               ].map(([icon, title, subtitle, status], index) => (
                 <div className="candidate-progress-item" key={title}>
                   <span className={`candidate-step-dot ${status}`}>
@@ -140,27 +184,32 @@ export default function CandidateDashboard() {
 
             <div className="candidate-actions">
               <ActionCard
-                buttonText="Start"
+                disabled={!progress.cvUploaded}
+                completed={progress.assessmentCompleted}
+                buttonText={
+                  progress.assessmentCompleted ? "Completed" : "Start"
+                }
                 icon="bx-code-alt"
-                text="3 problems - 90 min - Python, C++, Java"
+                text="3 problems - 90 min"
                 title="Code Assessment"
                 to="/candidate/assessment"
               />
               <ActionCard
-                buttonText="Begin"
+                disabled={!progress.assessmentCompleted}
+                completed={progress.interviewCompleted}
+                buttonText={progress.interviewCompleted ? "Completed" : "Begin"}
                 icon="bx-chat"
-                muted
-                text="15-20 min - Technical + Behavioral"
+                text="15-20 min"
                 title="AI Interview"
                 to="/candidate/interview"
               />
               <ActionCard
-                buttonText="Upload"
+                completed={progress.cvUploaded}
+                buttonText={progress.cvUploaded ? "Uploaded" : "Upload"}
                 icon="bx-upload"
-                muted
-                text="PDF or DOCX - AI parsed automatically"
+                text="PDF or DOCX"
                 title="Upload CV"
-                to="/candidate"
+                to="/candidate/profile"
               />
             </div>
           </div>
@@ -170,7 +219,15 @@ export default function CandidateDashboard() {
   );
 }
 
-function ActionCard({ buttonText, icon, muted, text, title, to }) {
+function ActionCard({
+  buttonText,
+  icon,
+  text,
+  title,
+  to,
+  disabled,
+  completed,
+}) {
   return (
     <article className="candidate-action-card">
       <div className="candidate-action-copy">
@@ -182,7 +239,11 @@ function ActionCard({ buttonText, icon, muted, text, title, to }) {
           <p>{text}</p>
         </div>
       </div>
-      <Link className={muted ? "muted" : ""} to={to}>
+      <Link
+        className={`${completed ? "done" : ""} ${disabled ? "disabled" : ""}`}
+        to={disabled ? "#" : to}
+      >
+        {completed ? "✓ " : ""}
         {buttonText}
       </Link>
     </article>

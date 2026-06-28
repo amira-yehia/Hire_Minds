@@ -61,7 +61,7 @@ export default function CandidateInterview() {
   const handleInterviewFinish = async () => {
     try {
       console.log("Interview Finished");
-
+      localStorage.setItem("interviewCompleted", "true");
       /*
     await interviewAPI.finish(
       session?.sessionId
