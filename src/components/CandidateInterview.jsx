@@ -5,8 +5,7 @@ import InterviewRoom from "./InterviewRoom";
 import FaceVerify from "./FaceVerify";
 
 const DEMO_WS_URL =
-  "wss://doaa-helmy-interviewer2.hf.space/ws/interview/9d6b4f81-2c3e-4a57-b8f9-1e7c5d2a6f43";
-
+  "wss://doaa-helmy-interviewer2.hf.space/ws/interview/6866948a-3e43-476b-800c-a4cb32024f05";
 export default function CandidateInterview() {
   const navigate = useNavigate();
   const [phase, setPhase] = useState("verify");
