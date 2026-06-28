@@ -179,7 +179,7 @@ export const candidateAPI = {
   //   }
   // },
   uploadPhoto: async (formData) => {
-    const response = await fetch(`${BASE_URL}/api/recruiters/upload-photo`, {
+    const response = await fetch(`${BASE_URL}/api/Candidate/upload-photo`, {
       method: "POST",
       headers: { Authorization: `Bearer ${getToken()}` },
       body: formData,
@@ -199,7 +199,7 @@ export const candidateAPI = {
 // ================================================================
 export const applicationsAPI = {
   /** Apply to a job — jobId as query param */
-  apply: (jobId) => request("POST", `/api/Applications?jobId=${jobId}`),
+  apply: (jobId) => request("POST", `/api/Applications/ApplyToJob/${jobId}`),
 
   /** All applications for a candidate */
   getByCandidate: (candidateId) =>

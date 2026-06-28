@@ -29,25 +29,20 @@ export default function App() {
     <Routes>
       {/* ── Landing ── */}
       <Route path="/" element={<Home />} />
-
       {/* ── Authentication ── */}
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/login" element={<AuthPage mode="login" />} />
       <Route path="/register" element={<AuthPage mode="register" />} />
-
       {/* ── Password Recovery ── */}
       {/* Email link format: /forget-password */}
       <Route path="/forget-password" element={<ForgetPassword />} />
       {/* Email link format: /reset-password?userId=...&resetToken=... */}
       <Route path="/reset-password" element={<ResetPassword />} />
-
       {/* ── Email Verification ── */}
       {/* Email link format: /verify-email?userId=...&token=... */}
       <Route path="/verify-email" element={<VerifyEmail />} />
-
       {/* ── Change Password (authenticated) ── */}
       <Route path="/change-password" element={<ChangePassword />} />
-
       {/* ── Candidate Portal ── */}
       {/* <Route path="/candidate" element={<CandidateDashboard />} />
       <Route path="/candidate/assessment" element={<CandidateAssessment />} />
@@ -140,7 +135,6 @@ export default function App() {
         }
       />
       {/* /hr-dashboard/reports/:id — add HRReportPage here when ready */}
-
       {/* ── Admin Portal ── */}
       {/* <Route path="/admin-dashboard" element={<AdminDashboardApp />} />
       <Route path="/admin" element={<AdminDashboardApp />} /> */}
@@ -160,6 +154,44 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      {/* Candidate Portal */}
+
+      <Route
+        path="/candidate"
+        element={
+          <ProtectedRoute allowedRoles={["candidate"]}>
+            <CandidateDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/candidate/profile"
+        element={
+          <ProtectedRoute allowedRoles={["candidate"]}>
+            <CandidateProfile />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/candidate/assessment"
+        element={
+          <ProtectedRoute allowedRoles={["candidate"]}>
+            <CandidateAssessment />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/candidate/interview"
+        element={
+          <ProtectedRoute allowedRoles={["candidate"]}>
+            <CandidateInterview />
+          </ProtectedRoute>
+        }
+      />
+
       <Route
         path="/candidate/face-verify"
         element={
@@ -168,6 +200,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/dashboard" element={<CandidateDashboard />} />
     </Routes>
   );
 }

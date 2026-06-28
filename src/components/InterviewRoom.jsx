@@ -1,30 +1,34 @@
 import { useEffect, useRef, useState } from "react";
 import useInterviewSocket from "../hooks/useInterviewSocket";
+import { interviewAPI } from "../api";
 
 export default function InterviewRoom({ websocketUrl, onFinish }) {
-  const { connected } = useInterviewSocket(websocketUrl);
-
+  // const { connected, socket } = useInterviewSocket(websocketUrl);
+  const { connected, socket } = useInterviewSocket(websocketUrl);
   const [recording, setRecording] = useState(false);
+
   const [transcript, setTranscript] = useState("");
+
+  const [status, setStatus] = useState("Ready");
 
   const [chatMessages, setChatMessages] = useState([
     {
       role: "ai",
-      text: "Hello, I'm your AI interviewer. Please introduce yourself.",
+      text: "Welcome to your AI interview. Please introduce yourself and tell me about your background.",
     },
   ]);
 
   const recognitionRef = useRef(null);
-
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
 
+  // Speech Recognition
   useEffect(() => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      console.log("Speech Recognition not supported");
+      console.error("Speech Recognition not supported");
       return;
     }
 
@@ -34,26 +38,79 @@ export default function InterviewRoom({ websocketUrl, onFinish }) {
     recognition.continuous = true;
     recognition.interimResults = true;
 
+    recognition.onstart = () => {
+      console.log("Speech recognition started");
+    };
+
     recognition.onresult = (event) => {
-      let finalTranscript = "";
+      let text = "";
 
       for (let i = 0; i < event.results.length; i++) {
-        finalTranscript += event.results[i][0].transcript + " ";
+        text += event.results[i][0].transcript + " ";
       }
 
-      setTranscript(finalTranscript.trim());
+      setTranscript(text.trim());
+    };
+
+    recognition.onerror = (e) => {
+      console.error("Speech Error:", e);
+    };
+
+    recognition.onend = () => {
+      console.log("Speech recognition ended");
     };
 
     recognitionRef.current = recognition;
+
+    return () => {
+      recognition.stop();
+    };
   }, []);
+
+  // Receive AI messages
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.onopen = () => {
+      console.log("WebSocket Connected");
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        console.log("AI Response:", data);
+
+        setChatMessages((prev) => [
+          ...prev,
+          {
+            role: "ai",
+            text: data.question || data.message || "Next Question",
+          },
+        ]);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    socket.onerror = (error) => {
+      console.error("Socket Error:", error);
+    };
+
+    socket.onclose = () => {
+      console.log("Socket Closed");
+    };
+  }, [socket]);
 
   const startRecording = async () => {
     try {
       setTranscript("");
+      setStatus("Requesting microphone...");
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
       });
+
+      console.log("Microphone Granted", stream);
 
       const recorder = new MediaRecorder(stream);
 
@@ -64,29 +121,21 @@ export default function InterviewRoom({ websocketUrl, onFinish }) {
       };
 
       recorder.onstop = async () => {
-        const audioBlob = new Blob(chunksRef.current, {
-          type: "audio/webm",
-        });
+        try {
+          const audioBlob = new Blob(chunksRef.current, {
+            type: "audio/webm",
+          });
 
-        console.log("Audio Recorded", audioBlob);
+          console.log("Recorded:", audioBlob);
 
-        const audioUrl = URL.createObjectURL(audioBlob);
+          const formData = new FormData();
 
-        window.open(audioUrl);
+          formData.append("audio", audioBlob, "interview.webm");
 
-        /*
-        بعد ما الباك يجهز:
-
-        const formData = new FormData();
-
-        formData.append(
-          "audio",
-          audioBlob,
-          "interview.webm"
-        );
-
-        await interviewAPI.uploadAudio(formData);
-        */
+          // await interviewAPI.uploadAudio(formData);
+        } catch (error) {
+          console.error(error);
+        }
       };
 
       mediaRecorderRef.current = recorder;
@@ -96,8 +145,12 @@ export default function InterviewRoom({ websocketUrl, onFinish }) {
       recognitionRef.current?.start();
 
       setRecording(true);
+
+      setStatus("Recording...");
     } catch (error) {
       console.error(error);
+
+      setStatus("Microphone Error");
     }
   };
 
@@ -108,29 +161,38 @@ export default function InterviewRoom({ websocketUrl, onFinish }) {
 
     setRecording(false);
 
-    if (transcript.trim()) {
-      const candidateAnswer = transcript.trim();
+    setStatus("Processing...");
 
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          role: "candidate",
+    const candidateAnswer = transcript.trim();
+
+    if (!candidateAnswer) return;
+
+    setChatMessages((prev) => [
+      ...prev,
+      {
+        role: "candidate",
+        text: candidateAnswer,
+      },
+    ]);
+
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(
+        JSON.stringify({
+          type: "answer",
           text: candidateAnswer,
-        },
-      ]);
-
-      setTimeout(() => {
-        setChatMessages((prev) => [
-          ...prev,
-          {
-            role: "ai",
-            text: "Thank you. Please continue with the next question.",
-          },
-        ]);
-      }, 1000);
+        }),
+      );
+    } else {
+      console.log("Socket not connected");
     }
-  };
 
+    setStatus("Ready");
+  };
+  const handleInterviewFinish = () => {
+    console.log("Interview Finished");
+
+    setPhase("completed");
+  };
   return (
     <section className="candidate-interview-card">
       <div className="candidate-chat-window">
@@ -153,13 +215,12 @@ export default function InterviewRoom({ websocketUrl, onFinish }) {
       <div className="candidate-profile-card">
         <h3>Live Transcript</h3>
 
-        <p>{transcript || "Press the microphone and start speaking"}</p>
+        <p>{transcript || "Press microphone"}</p>
       </div>
-
       <div className="candidate-composer">
         <button
           type="button"
-          className="candidate-mic-button"
+          className={`candidate-mic-button ${recording ? "recording" : ""}`}
           onClick={recording ? stopRecording : startRecording}
         >
           <i
@@ -167,22 +228,39 @@ export default function InterviewRoom({ websocketUrl, onFinish }) {
           ></i>
         </button>
 
-        <div>
+        <div className="candidate-status">
+          <span
+            className={`status-dot ${connected ? "online" : "offline"}`}
+          ></span>
+
           {recording
             ? "Recording..."
             : connected
-              ? "Ready"
-              : "Waiting for AI Server"}
+              ? "AI Connected"
+              : "AI Offline"}
         </div>
 
-        <button className="candidate-send-button" onClick={onFinish}>
+        <button
+          className="candidate-send-button"
+          onClick={() => {
+            const ok = window.confirm(
+              "Are you sure you want to finish the interview?",
+            );
+
+            console.log("confirm:", ok);
+            console.log("onFinish:", onFinish);
+
+            if (!ok) return;
+
+            onFinish?.();
+          }}
+        >
           Finish
         </button>
       </div>
     </section>
   );
 }
-
 // import { useEffect, useRef, useState } from "react";
 // import useInterviewSocket from "../hooks/useInterviewSocket";
 

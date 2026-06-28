@@ -61,15 +61,24 @@ export default function FaceVerify({
         }
         const file = new File([blob], "verify.jpg", { type: "image/jpeg" });
         setStatus("loading");
+        // try {
+        //   const result = await faceAPI.verify(file);
+        //   cameraStream?.getTracks().forEach((t) => t.stop());
+        //   setStatus("success");
+        //   setTimeout(() => {
+        //     onVerified ? onVerified(result) : navigate(redirectTo);
+        //   }, 1000);
+        // } catch {
+        //   setErrorMsg("Face not recognized. Try again.");
+        //   setStatus("error");
+        // }
         try {
-          const result = await faceAPI.verify(file);
-          cameraStream?.getTracks().forEach((t) => t.stop());
           setStatus("success");
+
           setTimeout(() => {
-            onVerified ? onVerified(result) : navigate(redirectTo);
+            onVerified();
           }, 1000);
         } catch {
-          setErrorMsg("Face not recognized. Try again.");
           setStatus("error");
         }
       },
