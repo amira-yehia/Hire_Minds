@@ -3,73 +3,193 @@ import { useParams, useNavigate } from "react-router-dom";
 import { candidateAPI } from "../../api";
 import "./CandidateReportPage.css";
 
-const fallbackRadar = {
-  "Problem Solving": 84,
-  Communication: 80,
-  "Technical Depth": 86,
-  "Code Quality": 82,
-  "System Design": 79,
-  Algorithms: 83,
+const fallbackReport = {
+  session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  candidate_name: "Ahmed Hassan",
+  job_role: "Machine Learning Intern",
+  level: "Intern",
+  average_score: 93,
+  overall_summary:
+    "Overall, Ahmed demonstrated good performance for the Machine Learning Intern role, answering most questions correctly with solid technical understanding.",
+  evaluations: [
+    {
+      question: "What is the difference between a list and a tuple in Python?",
+      score: 85,
+      covered_requirements: [
+        "list is mutable",
+        "tuple is immutable",
+        "list uses square brackets []",
+        "tuple uses parentheses ()",
+      ],
+      missing_requirements: [
+        "explicit mention that lists allow adding, removing, or modifying elements after creation",
+      ],
+    },
+    {
+      question:
+        "What is the difference between supervised and unsupervised learning?",
+      score: 92,
+      covered_requirements: [
+        "Supervised learning uses labeled data",
+        "Unsupervised learning uses unlabeled data",
+        "Classification and regression are supervised tasks",
+        "Clustering is an unsupervised task",
+      ],
+      missing_requirements: [
+        "Unsupervised learning discovers hidden patterns or structures",
+      ],
+    },
+    {
+      question: "What is train test split and why do we use it?",
+      score: 100,
+      covered_requirements: [
+        "definition of train test split",
+        "training set used to train model",
+        "testing set used to evaluate performance on unseen data",
+        "detect overfitting",
+        "measure generalization",
+      ],
+      missing_requirements: [],
+    },
+    {
+      question: "What is cross validation?",
+      score: 95,
+      covered_requirements: [
+        "Defines cross validation as a model evaluation technique",
+        "States dataset is divided into several folds",
+        "Mentions model is trained and tested multiple times using different folds",
+        "Notes that average performance is used as the final score",
+      ],
+      missing_requirements: [],
+    },
+  ],
+  fairness:
+    "AI scoring dimensions passed fairness checks. Evaluation focused strictly on demonstrated skills and interview performance.",
 };
 
-const fallbackCodingResults = [
-  { label: "Two Sum", value: 88 },
-  { label: "API Cache", value: 84 },
-  { label: "Merge K Lists", value: 86 },
-];
+const scoreCards = [{ key: "average_score", label: "Average Score" }];
 
-const fallbackCodingSummary = [
-  { label: "Correctness", value: "91%" },
-  { label: "Efficiency", value: "84%" },
-  { label: "Languages Used", value: "2" },
-];
+function toArray(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value?.$values)) return value.$values;
+  if (Array.isArray(value?.items)) return value.items;
+  return [];
+}
 
-const fallbackInterviewAnalysis = [
-  {
-    title: "Response Relevance",
-    score: "86/100",
-    note: "Answers remained focused on the prompt with relevant examples and context.",
-  },
-  {
-    title: "Communication Clarity",
-    score: "83/100",
-    note: "Generally clear delivery with a strong grasp of the key points discussed.",
-  },
-  {
-    title: "Technical Depth",
-    score: "87/100",
-    note: "Demonstrated solid understanding of architecture, tradeoffs, and implementation detail.",
-  },
-  {
-    title: "Sentiment",
-    score: "81/100",
-    note: "Positive and professional tone maintained throughout the session.",
-  },
-];
+function normalizeReport(raw) {
+  if (!raw || typeof raw !== "object") return fallbackReport;
 
-const scoreCards = [
-  { key: "cv", label: "CV Score" },
-  { key: "code", label: "Code Score" },
-  { key: "interview", label: "Interview" },
-  { key: "total", label: "Total Score" },
-];
+  // Try multiple likely shapes without breaking current UI.
+  const report = raw?.report ?? raw;
+
+  const candidate_name =
+    report?.candidate_name ??
+    report?.candidateName ??
+    raw?.candidate?.fullName ??
+    "Candidate";
+
+  const job_role = report?.job_role ?? report?.jobRole ?? "Role";
+  const level = report?.level ?? "Level";
+  const average_score = Number(
+    report?.average_score ?? report?.averageScore ?? 0,
+  );
+
+  const evaluations = toArray(report?.evaluations ?? report?.evaluationResults);
+
+  return {
+    session_id:
+      report?.session_id ?? report?.sessionId ?? fallbackReport.session_id,
+    candidate_name,
+    job_role,
+    level,
+    average_score: Number.isFinite(average_score)
+      ? average_score
+      : fallbackReport.average_score,
+    overall_summary:
+      report?.overall_summary ??
+      report?.overallSummary ??
+      fallbackReport.overall_summary,
+    evaluations: evaluations.length ? evaluations : fallbackReport.evaluations,
+    fairness: report?.fairness ?? fallbackReport.fairness,
+  };
+}
 
 function CircularScore({ value, label }) {
-  const progress = Math.max(0, Math.min(100, value));
+  const safeValue = Math.max(0, Math.min(100, Number(value) || 0));
+  const progress = safeValue;
 
   return (
     <div className="report-score-card">
       <div
         className="report-score-ring"
         style={{ "--progress": `${progress}%` }}
-        aria-label={`${label}: ${value}`}
+        aria-label={`${label}: ${safeValue}`}
       >
-        <span>{value}</span>
+        <span>{safeValue}</span>
       </div>
       <p>{label}</p>
     </div>
   );
 }
+
+function RequirementPills({ items, variant }) {
+  const list = toArray(items);
+  if (!list.length) {
+    return <div className={`req-empty ${variant}`}>None</div>;
+  }
+
+  return (
+    <div className={`req-pills ${variant}`}>
+      {list.map((t, idx) => (
+        <span key={`${t}-${idx}`} className="req-pill">
+          {t}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function EvaluationCard({ evaluation }) {
+  const question = evaluation?.question ?? "Question";
+  const score = Number(evaluation?.score ?? 0);
+  const covered =
+    evaluation?.covered_requirements ?? evaluation?.coveredRequirements;
+  const missing =
+    evaluation?.missing_requirements ?? evaluation?.missingRequirements;
+
+  return (
+    <article className="evaluation-card">
+      <div className="evaluation-top">
+        <div>
+          <div className="evaluation-question">{question}</div>
+          <div className="evaluation-score">
+            Score: {Number.isFinite(score) ? score : 0}
+          </div>
+        </div>
+        <span
+          className={`evaluation-badge ${score >= 90 ? "high" : score >= 70 ? "mid" : "low"}`}
+        >
+          {score >= 90 ? "Strong" : score >= 70 ? "Good" : "Needs improvement"}
+        </span>
+      </div>
+
+      <div className="evaluation-sections">
+        <section className="evaluation-section">
+          <h4>Covered requirements</h4>
+          <RequirementPills items={covered} variant="covered" />
+        </section>
+
+        <section className="evaluation-section">
+          <h4>Missing requirements</h4>
+          <RequirementPills items={missing} variant="missing" />
+        </section>
+      </div>
+    </article>
+  );
+}
+
+/* Removed duplicate CircularScore declaration (was redeclared after refactor). */
 
 function RadarChart({ radar }) {
   const labels = Object.keys(radar);
@@ -212,43 +332,36 @@ export default function CandidateReportPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [id]);
+
+  const report = normalizeReport(candidate);
+
+  // DEBUG: helps identify why the reports page is rendering blank
+  // (remove later if needed)
+  // eslint-disable-next-line no-console
+  console.log("HR ReportPage candidate:", candidate);
+  // eslint-disable-next-line no-console
+  console.log("HR ReportPage normalized report:", report);
+
   const activeCandidate = {
     initials:
-      candidate?.fullName
+      report?.candidate_name
         ?.split(" ")
+        .filter(Boolean)
         .map((n) => n[0])
         .join("")
         .slice(0, 2)
         .toUpperCase() || "CA",
-
-    name: candidate?.fullName || "Candidate",
-
-    role: candidate?.seniorityLevel || "Software Engineer",
-
+    name: report?.candidate_name || "Candidate",
+    role: report?.job_role || "Software Engineer",
     email: candidate?.email || "",
-
-    cv: 88,
-    code: 92,
-    interview: 85,
-    total: 89,
-
-    radar: fallbackRadar,
-
-    codingResults: fallbackCodingResults,
-
-    codingSummary: fallbackCodingSummary,
-
-    interviewAnalysis: fallbackInterviewAnalysis,
-
-    fairness:
-      "AI scoring dimensions passed fairness checks. Evaluation focused strictly on demonstrated skills and interview performance.",
+    average_score: report?.average_score ?? 0,
+    fairness: report?.fairness || "",
+    evaluations: report?.evaluations || [],
+    overall_summary: report?.overall_summary || "",
   };
 
-  const radar = activeCandidate.radar || fallbackRadar;
-  const codingResults = activeCandidate.codingResults || fallbackCodingResults;
-  const codingSummary = activeCandidate.codingSummary || fallbackCodingSummary;
-  const interviewAnalysis =
-    activeCandidate.interviewAnalysis || fallbackInterviewAnalysis;
+  // These legacy chart variables are no longer used by this report JSON UI.
+  // Keeping them as empty values would not break the UI, but we also avoid referencing undefined keys.
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -343,72 +456,39 @@ export default function CandidateReportPage() {
             </div>
           </section>
 
-          <section className="report-two-column">
-            <article className="report-card">
-              <div className="report-card-head">
-                <div>
-                  <span className="report-card-kicker">Capability map</span>
-                  <h3>Skill Radar</h3>
-                </div>
-              </div>
-              <div className="radar-wrap">
-                <RadarChart radar={radar} />
-              </div>
-            </article>
-
-            <article className="report-card">
-              <div className="report-card-head">
-                <div>
-                  <span className="report-card-kicker">
-                    Technical assessment
-                  </span>
-                  <h3>Coding Assessment Results</h3>
-                </div>
-              </div>
-              <div className="coding-bars">
-                {codingResults.map((item) => (
-                  <div key={item.label} className="coding-row">
-                    <div className="coding-row-head">
-                      <span>{item.label}</span>
-                    </div>
-                    <div className="coding-track">
-                      <div
-                        className="coding-fill"
-                        style={{ width: `${Math.max(8, item.value)}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="coding-stats">
-                {codingSummary.map((item) => (
-                  <div key={item.label}>
-                    <strong>{item.value}</strong>
-                    <span>{item.label}</span>
-                  </div>
-                ))}
-              </div>
-            </article>
-          </section>
-
-          <section className="report-card report-analysis-card">
+          <section className="report-card report-overview-card">
             <div className="report-card-head">
               <div>
-                <span className="report-card-kicker">Communication review</span>
-                <h3>AI Interview Analysis</h3>
+                <span className="report-card-kicker">Overall Summary</span>
+                <h3>AI Evaluation</h3>
               </div>
             </div>
-            <div className="analysis-grid">
-              {interviewAnalysis.map((item) => (
-                <article key={item.title} className="analysis-item">
-                  <div className="analysis-head">
-                    <strong>{item.title}</strong>
-                    <span>{item.score}</span>
-                  </div>
-                  <p>{item.note}</p>
-                </article>
-              ))}
+            <p className="report-overview-text">
+              {activeCandidate.overall_summary || "No summary available."}
+            </p>
+          </section>
+
+          <section className="report-card evaluation-list-card">
+            <div className="report-card-head">
+              <div>
+                <span className="report-card-kicker">Question-by-question</span>
+                <h3>Evaluations</h3>
+              </div>
+            </div>
+
+            <div className="evaluation-list">
+              {activeCandidate.evaluations.length ? (
+                activeCandidate.evaluations.map((ev, idx) => (
+                  <EvaluationCard
+                    key={`${ev?.question ?? idx}-${idx}`}
+                    evaluation={ev}
+                  />
+                ))
+              ) : (
+                <div className="empty-evaluations">
+                  No evaluations available.
+                </div>
+              )}
             </div>
           </section>
 

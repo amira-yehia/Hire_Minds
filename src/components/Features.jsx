@@ -1,13 +1,6 @@
 import React from "react";
 import "./index.css";
-import {
-  FileText,
-  Brain,
-  Code,
-  BarChart3,
-  ShieldCheck,
-  Users,
-} from "lucide-react";
+import { FileText, Brain, BarChart3, ShieldCheck, Users } from "lucide-react";
 
 const features = [
   {
@@ -15,16 +8,13 @@ const features = [
     title: "AI CV Parsing",
     desc: "Automatically extract skills, experience, and education from resumes with intelligent matching against job descriptions.",
   },
+
   {
     icon: <Brain size={28} />,
     title: "AI Interview Simulation",
     desc: "Dynamic conversational interviews powered by AI that evaluate technical depth, communication, and problem-solving.",
   },
-  {
-    icon: <Code size={28} />,
-    title: "Online Code Judge",
-    desc: "Secure sandboxed code execution with multi-language support, automatic test validation, and efficiency scoring.",
-  },
+
   {
     icon: <BarChart3 size={28} />,
     title: "Analytics Dashboard",

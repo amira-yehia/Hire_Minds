@@ -16,14 +16,31 @@ export default function FaceVerify({
 
   const startCamera = useCallback(async () => {
     setCameraError("");
+
+    if (!navigator?.mediaDevices?.getUserMedia) {
+      setCameraError(
+        "Your browser does not support camera access (getUserMedia).",
+      );
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480, facingMode: "user" },
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          // facingMode intentionally omitted to reduce device/driver issues
+        },
         audio: false,
       });
       setCameraStream(stream);
-    } catch {
-      setCameraError("Camera access denied.");
+    } catch (err) {
+      const e = err;
+      const name = e?.name ?? "UnknownError";
+      const message = e?.message ?? "";
+      setCameraError(
+        `Camera error: ${name}${message ? ` — ${message}` : ""}. Please check permissions/HTTPS/device.`,
+      );
     }
   }, []);
 

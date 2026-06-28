@@ -41,12 +41,9 @@ export default function CandidateDashboard() {
   // };
   const progress = {
     cvUploaded: localStorage.getItem(`cv-done-${userId}`) === "true",
-
-    assessmentCompleted:
-      localStorage.getItem(`assessment-${userId}`) === "true",
-
     interviewCompleted: localStorage.getItem(`interview-${userId}`) === "true",
   };
+
   if (loading) {
     return (
       <div className="candidate-shell">
@@ -91,24 +88,10 @@ export default function CandidateDashboard() {
                 ],
 
                 [
-                  "bx-code-alt",
-                  "Code",
-                  "Assessment",
-                  progress.assessmentCompleted ? "done" : "",
-                  // : progress.cvUploaded
-                  //   ? "active"
-                  //   : "",
-                ],
-
-                [
                   "bx-message-square",
                   "AI",
                   "Interview",
-                  progress.interviewCompleted
-                    ? "done"
-                    : progress.assessmentCompleted
-                      ? "active"
-                      : "",
+                  progress.interviewCompleted ? "done" : "active",
                 ],
 
                 [
@@ -117,12 +100,14 @@ export default function CandidateDashboard() {
                   "Review",
                   progress.interviewCompleted ? "active" : "",
                 ],
-              ].map(([icon, title, subtitle, status], index) => (
+              ].map(([icon, title, subtitle, status], index, arr) => (
                 <div className="candidate-progress-item" key={title}>
                   <span className={`candidate-step-dot ${status}`}>
                     <i className={`bx ${icon}`}></i>
                   </span>
-                  {index < 4 && <span className="candidate-step-line"></span>}
+                  {index < arr.length - 1 && (
+                    <span className="candidate-step-line"></span>
+                  )}
                   <strong>{title}</strong>
                   <small>{subtitle}</small>
                 </div>
@@ -193,17 +178,6 @@ export default function CandidateDashboard() {
             <div className="candidate-actions">
               <ActionCard
                 disabled={!progress.cvUploaded}
-                completed={progress.assessmentCompleted}
-                buttonText={
-                  progress.assessmentCompleted ? "Completed" : "Start"
-                }
-                icon="bx-code-alt"
-                text="3 problems - 90 min"
-                title="Code Assessment"
-                to="/candidate/assessment"
-              />
-              <ActionCard
-                disabled={!progress.assessmentCompleted}
                 completed={progress.interviewCompleted}
                 buttonText={progress.interviewCompleted ? "Completed" : "Begin"}
                 icon="bx-chat"

@@ -1,6 +1,6 @@
 import React from "react";
 import "./index.css";
-import { FileText, Code, Brain } from "lucide-react";
+import { FileText, Brain } from "lucide-react";
 
 const Scoring = () => {
   return (
@@ -21,18 +21,10 @@ const Scoring = () => {
           </div>
 
           <div className="score-card">
-            <div className="icon green">
-              <Code size={28} />
-            </div>
-            <h3>45%</h3>
-            <span>Coding Score</span>
-          </div>
-
-          <div className="score-card">
             <div className="icon purple">
               <Brain size={28} />
             </div>
-            <h3>30%</h3>
+            <h3>75%</h3>
             <span>AI Interview</span>
           </div>
         </div>
