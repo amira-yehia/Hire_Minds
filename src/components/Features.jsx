@@ -21,11 +21,6 @@ const features = [
     desc: "Dynamic conversational interviews powered by AI that evaluate technical depth, communication, and problem-solving.",
   },
   {
-    icon: <Code size={28} />,
-    title: "Online Code Judge",
-    desc: "Secure sandboxed code execution with multi-language support, automatic test validation, and efficiency scoring.",
-  },
-  {
     icon: <BarChart3 size={28} />,
     title: "Analytics Dashboard",
     desc: "Comprehensive HR dashboard with candidate rankings, skill distributions, and exportable performance reports.",

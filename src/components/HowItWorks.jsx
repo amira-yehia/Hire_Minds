@@ -11,9 +11,9 @@ const steps = [
   },
   {
     number: "02",
-    title: "Code Assessment",
+    title: "CV Analysis",
     description:
-      "Complete coding challenges in a secure online judge with real-time feedback.",
+      "Our AI analyzes resumes for relevant skills, experience, and role alignment.",
   },
   {
     number: "03",

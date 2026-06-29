@@ -91,22 +91,12 @@ export default function CandidateDashboard() {
                 ],
 
                 [
-                  "bx-code-alt",
-                  "Code",
-                  "Assessment",
-                  progress.assessmentCompleted ? "done" : "",
-                  // : progress.cvUploaded
-                  //   ? "active"
-                  //   : "",
-                ],
-
-                [
                   "bx-message-square",
                   "AI",
                   "Interview",
                   progress.interviewCompleted
                     ? "done"
-                    : progress.assessmentCompleted
+                    : progress.cvUploaded
                       ? "active"
                       : "",
                 ],
@@ -192,18 +182,7 @@ export default function CandidateDashboard() {
 
             <div className="candidate-actions">
               <ActionCard
-                disabled={!progress.cvUploaded}
-                completed={progress.assessmentCompleted}
-                buttonText={
-                  progress.assessmentCompleted ? "Completed" : "Start"
-                }
-                icon="bx-code-alt"
-                text="3 problems - 90 min"
-                title="Code Assessment"
-                to="/candidate/assessment"
-              />
-              <ActionCard
-                disabled={!progress.assessmentCompleted}
+                disabled={!progress.interviewCompleted && !progress.cvUploaded}
                 completed={progress.interviewCompleted}
                 buttonText={progress.interviewCompleted ? "Completed" : "Begin"}
                 icon="bx-chat"
