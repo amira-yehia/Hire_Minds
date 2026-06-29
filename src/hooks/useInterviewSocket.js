@@ -1,19 +1,16 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 
-const AI_BASE = "https://doaa-helmy-interviewer2.hf.space";
-
 // ── Browser TTS ───────────────────────────────────────────────
 function speakText(text, onEnd) {
   if (!window.speechSynthesis) {
     onEnd?.();
     return;
   }
-  window.speechSynthesis.cancel(); // وقف أي كلام قبليه
+  window.speechSynthesis.cancel();
   const utt = new SpeechSynthesisUtterance(text);
   utt.lang = "en-US";
   utt.rate = 1;
   utt.pitch = 1;
-  // اختار أحسن صوت إنجليزي متاح
   const voices = window.speechSynthesis.getVoices();
   const preferred =
     voices.find(
@@ -62,7 +59,10 @@ export default function useInterviewSocket(websocketUrl) {
   }, []);
 
   useEffect(() => {
+    // ✅ لو مفيش URL، متعملش حاجة
     if (!websocketUrl) return;
+
+    // ✅ مانعين double-connect من React StrictMode
     if (didConnectRef.current) return;
     didConnectRef.current = true;
 
@@ -72,7 +72,7 @@ export default function useInterviewSocket(websocketUrl) {
     socketRef.current = ws;
 
     ws.onopen = () => {
-      console.log("[WS] Connected ✅");
+      console.log("[WS] Connected ✅", websocketUrl);
       setConnected(true);
       setWsError(null);
     };
@@ -82,12 +82,15 @@ export default function useInterviewSocket(websocketUrl) {
       setConnected(false);
     };
 
-    ws.onerror = () => {
+    ws.onerror = (e) => {
+      console.error("[WS] Error:", e);
       setWsError("Connection failed.");
     };
 
     ws.onmessage = (event) => {
-      // Binary = TTS audio من السيرفر — نتجاهله لأننا بنستخدم browser TTS
+      console.log("RAW:", event.data);
+
+      // Binary = TTS audio من السيرفر — بنتجاهله لأننا بنستخدم browser TTS
       if (event.data instanceof ArrayBuffer) return;
 
       let msg;
@@ -126,6 +129,7 @@ export default function useInterviewSocket(websocketUrl) {
         case "error":
           console.error("[WS] Server error:", msg.message);
           addAiMessage(`⚠️ ${msg.message}`, "ERROR", null);
+          setWsError(msg.message);
           setIsAiSpeaking(false);
           break;
 

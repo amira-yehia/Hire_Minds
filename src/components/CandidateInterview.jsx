@@ -1,20 +1,73 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CandidateSidebar from "./CandidateSidebar";
 import InterviewRoom from "./InterviewRoom";
 import FaceVerify from "./FaceVerify";
+import { aiInterviewAPI, getSession } from "../api";
 
-const DEMO_WS_URL =
-  "wss://doaa-helmy-interviewer2.hf.space/ws/interview/6866948a-3e43-476b-800c-a4cb32024f05";
 export default function CandidateInterview() {
   const navigate = useNavigate();
   const [phase, setPhase] = useState("verify");
+  const [sessionId, setSessionId] = useState(null);
+  const [websocketUrl, setWebsocketUrl] = useState(null);
+  const [durationSeconds, setDurationSeconds] = useState(1800); // ✅ هيتعدل من السيرفر
+  const [loading, setLoading] = useState(false);
+
+  const prepareInterview = async () => {
+    try {
+      setLoading(true);
+
+      const session = getSession();
+
+      const payload = {
+        session_id: crypto.randomUUID(),
+        candidate_name: session?.fullName || "Candidate",
+        job_role: "Frontend Developer",
+        level: "Junior",
+        duration_limit: 1800, // ✅ السيرفر هيرد بالـ duration الحقيقي
+        questions: [
+          {
+            question: "Tell me about yourself",
+            golden_answer: "",
+            skill: "General",
+            rationale: "",
+            time_limit_seconds: 500,
+          },
+        ],
+      };
+
+      const result = await aiInterviewAPI.prepare(payload);
+      console.log("PREPARE RESPONSE:", result);
+
+      // ✅ session_id و websocket_url من السيرفر
+      const sid = result.session_id;
+      setSessionId(sid);
+
+      // ✅ الـ WS URL من السيرفر لو موجود، أو نبنيه من الـ session_id
+      const wsUrl = result.websocket_url || aiInterviewAPI.wsUrl(sid);
+      console.log("WS URL:", wsUrl);
+      setWebsocketUrl(wsUrl);
+
+      // ✅ الـ duration من السيرفر لو موجود
+      if (result.duration_limit && result.duration_limit > 0) {
+        setDurationSeconds(result.duration_limit);
+      }
+
+      setPhase("started");
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInterviewFinish = () => {
     localStorage.setItem("interviewCompleted", "true");
     setPhase("completed");
   };
 
+  // ── Step 1: Face Verification ──────────────────────────────
   if (phase === "verify") {
     return (
       <div className="candidate-shell">
@@ -34,6 +87,7 @@ export default function CandidateInterview() {
     );
   }
 
+  // ── Step 2: Ready to Start ─────────────────────────────────
   if (phase === "ready") {
     return (
       <div className="candidate-shell">
@@ -63,10 +117,11 @@ export default function CandidateInterview() {
               </p>
               <button
                 className="candidate-wide-button"
-                onClick={() => setPhase("started")}
+                onClick={prepareInterview}
+                disabled={loading}
                 style={{ marginTop: "1.5rem" }}
               >
-                Start Interview
+                {loading ? "Preparing Interview…" : "Start Interview"}
               </button>
             </article>
           </section>
@@ -75,6 +130,7 @@ export default function CandidateInterview() {
     );
   }
 
+  // ── Step 3: Completed ──────────────────────────────────────
   if (phase === "completed") {
     return (
       <div className="candidate-shell">
@@ -96,12 +152,16 @@ export default function CandidateInterview() {
     );
   }
 
+  // ── Step 3: Interview Running ──────────────────────────────
   return (
     <div className="candidate-shell">
       <CandidateSidebar />
       <main className="candidate-main">
+        {/* ✅ بنبعت durationSeconds من السيرفر للـ InterviewRoom */}
         <InterviewRoom
-          websocketUrl={DEMO_WS_URL}
+          sessionId={sessionId}
+          websocketUrl={websocketUrl}
+          durationSeconds={durationSeconds}
           onFinish={handleInterviewFinish}
         />
       </main>

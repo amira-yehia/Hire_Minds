@@ -359,64 +359,233 @@ export const faceAPI = {
   },
 };
 // ================================================================
+// AI INTERVIEW API
+// ================================================================
+
+// const AI_BASE_URL = "https://doaa-helmy-interviewer2.hf.space";
+const AI_BASE_URL = "https://doaa29helmy-ai-interviewer-last.hf.space";
+
+export const interviewAPI = {
+  prepare: async (data) => {
+    const res = await fetch(`${AI_BASE_URL}/api/interview/prepare`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) throw new Error("Failed to prepare interview");
+
+    return res.json();
+  },
+
+  getStatus: async (sessionId) => {
+    const res = await fetch(`${AI_BASE_URL}/api/interview/${sessionId}/status`);
+
+    if (!res.ok) throw new Error("Failed to get interview status");
+
+    return res.json();
+  },
+
+  getTranscript: async (sessionId) => {
+    const res = await fetch(
+      `${AI_BASE_URL}/api/interview/${sessionId}/transcript`,
+    );
+
+    if (!res.ok) throw new Error("Failed to get transcript");
+
+    return res.json();
+  },
+
+  evaluate: async (sessionId) => {
+    const res = await fetch(`${AI_BASE_URL}/evaluator/evaluate/${sessionId}`, {
+      method: "POST",
+    });
+
+    if (!res.ok) throw new Error("Failed to evaluate interview");
+
+    return res.json();
+  },
+};
+// ================================================================
 // INTERVIEW  →  /api/Interview  (ASP.NET backend)
 // ================================================================
-export const interviewAPI = {
+export const hrInterviewAPI = {
   getById: (id) => request("GET", `/api/Interview/interview/${id}`),
+
   getByApplicationId: (id) =>
     request("GET", `/api/Interview/interviewbyApplicationId/${id}`),
 };
+// ================================================================
+// AI INTERVIEWER
+// ================================================================
+const AI_INTERVIEW_BASE_URL =
+  "https://doaa29helmy-ai-interviewer-last.hf.space";
 
-// ================================================================
-// AI INTERVIEWER  →  https://doaa-helmy-interviewer2.hf.space
-// ================================================================
-const AI_INTERVIEW_BASE_URL = "https://doaa-helmy-interviewer2.hf.space";
-const AI_INTERVIEW_WS_BASE = "wss://doaa-helmy-interviewer2.hf.space";
+const AI_INTERVIEW_WS_BASE = "wss://doaa29helmy-ai-interviewer-last.hf.space";
 
 export const aiInterviewAPI = {
   /**
-   * Prepare a session before the candidate connects via WebSocket.
-   * Called once when the candidate clicks "Start Interview".
-   *
-   * @param {object} payload
-   * @param {string} payload.session_id   - UUID you generate on the frontend
-   * @param {string} payload.candidate_name
-   * @param {string} payload.job_role
-   * @param {string} payload.level        - "Junior" | "Mid" | "Senior"
-   * @param {number} payload.duration_limit - seconds (default 1800)
-   * @param {Array}  payload.questions    - [{ question, golden_answer, skill }]
+   * Create interview session
    */
   prepare: async (payload) => {
     const res = await fetch(`${AI_INTERVIEW_BASE_URL}/api/interview/prepare`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(payload),
     });
+
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: res.statusText }));
+
       throw new Error(err.detail || "Failed to prepare interview session");
     }
-    return res.json(); // { session_id, status, websocket_url, total_questions }
+
+    return await res.json();
   },
 
-  /** Build the full WebSocket URL from a session_id */
+  /**
+   * Build websocket url
+   */
   wsUrl: (sessionId) => `${AI_INTERVIEW_WS_BASE}/ws/interview/${sessionId}`,
 
-  /** Check session status (pending | active | completed) */
+  /**
+   * Get session status
+   */
   status: async (sessionId) => {
     const res = await fetch(
       `${AI_INTERVIEW_BASE_URL}/api/interview/${sessionId}/status`,
     );
+
     if (!res.ok) throw new Error("Session not found");
-    return res.json();
+
+    return await res.json();
   },
 
-  /** Health check */
+  /**
+   * Trigger evaluation
+   */
+  evaluate: async (sessionId) => {
+    const res = await fetch(
+      `${AI_INTERVIEW_BASE_URL}/evaluator/evaluate/${sessionId}`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+        },
+      },
+    );
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+
+      throw new Error(err.detail || "Failed to evaluate interview");
+    }
+
+    return await res.json();
+  },
+
+  /**
+   * Get transcript/report
+   */
+  transcript: async (sessionId) => {
+    const res = await fetch(
+      `${AI_INTERVIEW_BASE_URL}/api/interview/${sessionId}/transcript`,
+    );
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+
+      throw new Error(err.detail || "Failed to get transcript");
+    }
+
+    return await res.json();
+  },
+
+  /**
+   * Delete interview session
+   */
+  deleteSession: async (sessionId) => {
+    const res = await fetch(
+      `${AI_INTERVIEW_BASE_URL}/api/interview/${sessionId}`,
+      {
+        method: "DELETE",
+      },
+    );
+
+    if (!res.ok) throw new Error("Failed to delete session");
+
+    return await res.json();
+  },
+
+  /**
+   * Health check
+   */
   health: async () => {
     const res = await fetch(`${AI_INTERVIEW_BASE_URL}/health`);
-    return res.json();
+
+    if (!res.ok) throw new Error("AI server unavailable");
+
+    return await res.json();
   },
 };
+// ================================================================
+// AI INTERVIEWER  →  https://doaa-helmy-interviewer2.hf.space
+// ================================================================
+// const AI_INTERVIEW_BASE_URL = "https://doaa-helmy-interviewer2.hf.space";
+// const AI_INTERVIEW_WS_BASE = "wss://doaa-helmy-interviewer2.hf.space";
+// const AI_INTERVIEW_BASE_URL =
+//   "https://doaa29helmy-ai-interviewer-last.hf.space";
+
+// const AI_INTERVIEW_WS_BASE = "wss://doaa29helmy-ai-interviewer-last.hf.space";
+
+// export const aiInterviewAPI = {
+//   /**
+//    * Prepare a session before the candidate connects via WebSocket.
+//    * Called once when the candidate clicks "Start Interview".
+//    *
+//    * @param {object} payload
+//    * @param {string} payload.session_id   - UUID you generate on the frontend
+//    * @param {string} payload.candidate_name
+//    * @param {string} payload.job_role
+//    * @param {string} payload.level        - "Junior" | "Mid" | "Senior"
+//    * @param {number} payload.duration_limit - seconds (default 1800)
+//    * @param {Array}  payload.questions    - [{ question, golden_answer, skill }]
+//    */
+//   prepare: async (payload) => {
+//     const res = await fetch(`${AI_INTERVIEW_BASE_URL}/api/interview/prepare`, {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify(payload),
+//     });
+//     if (!res.ok) {
+//       const err = await res.json().catch(() => ({ detail: res.statusText }));
+//       throw new Error(err.detail || "Failed to prepare interview session");
+//     }
+//     return res.json(); // { session_id, status, websocket_url, total_questions }
+//   },
+
+//   /** Build the full WebSocket URL from a session_id */
+//   wsUrl: (sessionId) => `${AI_INTERVIEW_WS_BASE}/ws/interview/${sessionId}`,
+
+//   /** Check session status (pending | active | completed) */
+//   status: async (sessionId) => {
+//     const res = await fetch(
+//       `${AI_INTERVIEW_BASE_URL}/api/interview/${sessionId}/status`,
+//     );
+//     if (!res.ok) throw new Error("Session not found");
+//     return res.json();
+//   },
+
+//   /** Health check */
+//   health: async () => {
+//     const res = await fetch(`${AI_INTERVIEW_BASE_URL}/health`);
+//     return res.json();
+//   },
+// };
 
 // ================================================================
 // FACE RECOGNITION  →  /Api/FaceRecognition
