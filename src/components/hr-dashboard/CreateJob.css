@@ -143,7 +143,7 @@
 .create-job-btn {
   width: 100%;
   margin-top: 25px;
-  background: #003566;
+  background: #0f172a;
   color: white;
   border: none;
   padding: 15px;
@@ -155,7 +155,7 @@
 }
 
 .create-job-btn:hover {
-  background: #004b8d;
+  background: #131b2f;
 }
 
 .create-job-btn:disabled {
@@ -176,6 +176,190 @@
 /* ===========================
    Success
 =========================== */
+
+.form-success {
+  color: #16a34a;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+.create-job-modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 30;
+  padding: 20px;
+}
+
+.create-job-modal {
+  width: min(100%, 840px);
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.18);
+  position: relative;
+  max-height: calc(100vh - 64px);
+  display: grid;
+  gap: 20px;
+}
+
+.create-job-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.modal-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #047857;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.create-job-modal-header h2 {
+  margin: 0;
+  font-size: 1.75rem;
+  color: #0f172a;
+}
+
+.modal-close-button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #ffffff;
+  border-radius: 14px;
+  color: #475569;
+  font-size: 1.3rem;
+  line-height: normal;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.modal-close-button:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.modal-description {
+  margin: 0;
+  color: #475569;
+  line-height: 1.75;
+  font-size: 0.97rem;
+}
+
+.modal-response-form {
+  display: grid;
+  gap: 22px;
+}
+
+.modal-field {
+  display: grid;
+  gap: 10px;
+}
+
+.modal-field-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.modal-field label {
+  display: block;
+  margin-bottom: 8px;
+  color: #475569;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.create-job-modal-body {
+  overflow: auto;
+  max-height: calc(80vh - 140px);
+}
+
+.create-job-modal-body textarea,
+.create-job-modal-body input {
+  width: 100%;
+  border: 1px solid #d8dde8;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 0.95rem;
+  color: #0f172a;
+  background: #f8fafc;
+  outline: none;
+}
+
+.create-job-modal-body textarea {
+  min-height: 120px;
+  resize: none;
+}
+
+.create-job-modal-body input {
+  height: 44px;
+}
+
+.create-job-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.copy-response-btn {
+  background: #0f172a;
+  color: white;
+  border: none;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  transition: 0.2s;
+}
+
+.copy-response-btn:hover {
+  background: #131b2f;
+}
+
+.secondary-btn {
+  border: 1px solid #d8dde8;
+  background: white;
+  color: #0f172a;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  transition: 0.2s;
+}
+
+.secondary-btn:hover {
+  background: #f8fafc;
+}
+
+.create-job-btn {
+  min-width: 170px;
+}
+
+@media (max-width: 768px) {
+  .create-job-modal {
+    padding: 22px;
+  }
+
+  .create-job-modal-body textarea {
+    min-height: 240px;
+  }
+}
 
 .form-success {
   color: #16a34a;

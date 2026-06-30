@@ -1,51 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import {
-  applicationsAPI,
-  candidateAPI,
-  hrInterviewAPI,
-  toArray,
-} from "../../api";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import { applicationsAPI, candidateAPI, jobsAPI, toArray } from "../../api";
 import { candidates as fallbackCandidates } from "./candidatesData";
 import "./CandidateReportPage.css";
-
-const fallbackRadar = {
-  "Problem Solving": 84,
-  Communication: 80,
-  "Technical Depth": 86,
-  "Code Quality": 82,
-  "System Design": 79,
-  Algorithms: 83,
-};
-
-const fallbackInterviewAnalysis = [
-  {
-    title: "Response Relevance",
-    score: "86/100",
-    note: "Answers remained focused on the prompt with relevant examples and context.",
-  },
-  {
-    title: "Communication Clarity",
-    score: "83/100",
-    note: "Generally clear delivery with a strong grasp of the key points discussed.",
-  },
-  {
-    title: "Technical Depth",
-    score: "87/100",
-    note: "Demonstrated solid understanding of architecture, tradeoffs, and implementation detail.",
-  },
-  {
-    title: "Sentiment",
-    score: "81/100",
-    note: "Positive and professional tone maintained throughout the session.",
-  },
-];
-
-const scoreCards = [
-  { key: "cv", label: "CV Score" },
-  { key: "interview", label: "Interview" },
-  { key: "total", label: "Total Score" },
-];
 
 const pickValue = (source, paths = []) => {
   if (!source || typeof source !== "object") return undefined;
@@ -69,133 +26,6 @@ const pickValue = (source, paths = []) => {
 const toNumber = (value) => {
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
-};
-
-const normalizeRadar = (source) => {
-  const direct = pickValue(source, [
-    "radar",
-    "skillScores",
-    "skillBreakdown",
-    "competencies",
-    "metrics",
-    "scores",
-  ]);
-
-  if (direct && typeof direct === "object" && !Array.isArray(direct)) {
-    const normalized = Object.entries(direct).reduce((acc, [label, value]) => {
-      const parsed = toNumber(value?.score ?? value?.value ?? value);
-      if (parsed != null) {
-        acc[label] = Math.max(0, Math.min(100, parsed));
-      }
-      return acc;
-    }, {});
-
-    if (Object.keys(normalized).length) return normalized;
-  }
-
-  const arraySource = Array.isArray(direct) ? direct : [];
-  const fromArray = arraySource.reduce((acc, item) => {
-    const label = pickValue(item, [
-      "label",
-      "name",
-      "title",
-      "dimension",
-      "skill",
-    ]);
-    const value = toNumber(
-      pickValue(item, ["score", "value", "rating", "points"]),
-    );
-    if (label && value != null) {
-      acc[label] = Math.max(0, Math.min(100, value));
-    }
-    return acc;
-  }, {});
-
-  if (Object.keys(fromArray).length) return fromArray;
-
-  return fallbackRadar;
-};
-
-const normalizeInterviewAnalysis = (source) => {
-  const candidates = [
-    source?.interviewAnalysis,
-    source?.analysis,
-    source?.evaluation?.analysis,
-    source?.evaluation?.dimensions,
-    source?.report?.analysis,
-    source?.insights,
-  ];
-
-  for (const candidate of candidates) {
-    if (Array.isArray(candidate)) {
-      const items = candidate
-        .map((item) => {
-          if (!item || typeof item !== "object") return null;
-          const title = pickValue(item, [
-            "title",
-            "name",
-            "label",
-            "dimension",
-          ]);
-          const score = pickValue(item, ["score", "value", "rating"]);
-          const note = pickValue(item, [
-            "note",
-            "summary",
-            "description",
-            "insight",
-          ]);
-
-          if (!title) return null;
-
-          return {
-            title,
-            score: score ?? "—",
-            note:
-              note || "Assessment generated from the latest interview session.",
-          };
-        })
-        .filter(Boolean);
-
-      if (items.length) return items;
-    }
-
-    if (
-      candidate &&
-      typeof candidate === "object" &&
-      !Array.isArray(candidate)
-    ) {
-      const items = Object.entries(candidate)
-        .map(([title, value]) => {
-          if (typeof value === "object" && value !== null) {
-            const score = pickValue(value, ["score", "value", "rating"]);
-            const note = pickValue(value, [
-              "note",
-              "summary",
-              "description",
-              "insight",
-            ]);
-            return {
-              title,
-              score: score ?? "—",
-              note:
-                note ||
-                "Assessment generated from the latest interview session.",
-            };
-          }
-
-          return {
-            title,
-            score: value ?? "—",
-            note: "Assessment generated from the latest interview session.",
-          };
-        })
-        .filter((item) => item && item.title);
-
-      if (items.length) return items;
-    }
-  }
-
-  return fallbackInterviewAnalysis;
 };
 
 const normalizeCandidateReport = ({
@@ -265,158 +95,14 @@ const normalizeCandidateReport = ({
     fallbackCandidate?.cv ??
     88;
 
-  const interviewScore =
-    toNumber(
-      pickValue(interviewSource, ["interviewScore", "score", "overallScore"]),
-    ) ??
-    toNumber(
-      pickValue(evaluationSource, ["interviewScore", "score", "overallScore"]),
-    ) ??
-    toNumber(
-      pickValue(reportSource, ["interviewScore", "score", "overallScore"]),
-    ) ??
-    fallbackCandidate?.interview ??
-    85;
-
-  const totalScore =
-    toNumber(
-      pickValue(source, ["totalScore", "overallScore", "compositeScore"]),
-    ) ??
-    toNumber(
-      pickValue(applicationSource, [
-        "totalScore",
-        "overallScore",
-        "compositeScore",
-      ]),
-    ) ??
-    Math.round((cvScore + interviewScore) / 2) ??
-    fallbackCandidate?.total ??
-    89;
-
-  const radar = normalizeRadar({
-    ...source,
-    ...interviewSource,
-    ...evaluationSource,
-    ...reportSource,
-  });
-
-  const analysis = normalizeInterviewAnalysis({
-    ...source,
-    ...interviewSource,
-    ...evaluationSource,
-    ...reportSource,
-  });
-
-  const fairness =
-    pickValue(interviewSource, [
-      "fairness",
-      "fairnessText",
-      "biasAssessment",
-    ]) ||
-    pickValue(evaluationSource, [
-      "fairness",
-      "fairnessText",
-      "biasAssessment",
-    ]) ||
-    pickValue(reportSource, ["fairness", "fairnessText", "biasAssessment"]) ||
-    pickValue(source, ["fairness"]) ||
-    fallbackCandidate?.fairness ||
-    "AI scoring dimensions passed fairness checks. Evaluation focused strictly on demonstrated skills and interview performance.";
-
   return {
     initials,
     name: fullName,
     role,
     email,
     cv: cvScore,
-    interview: interviewScore,
-    total: totalScore,
-    radar,
-    interviewAnalysis: analysis,
-    fairness,
   };
 };
-
-function CircularScore({ value, label }) {
-  const progress = Math.max(0, Math.min(100, value));
-
-  return (
-    <div className="report-score-card">
-      <div
-        className="report-score-ring"
-        style={{ "--progress": `${progress}%` }}
-        aria-label={`${label}: ${value}`}
-      >
-        <span>{value}</span>
-      </div>
-      <p>{label}</p>
-    </div>
-  );
-}
-
-function RadarChart({ radar }) {
-  const labels = Object.keys(radar);
-  const values = Object.values(radar);
-  const centerX = 110;
-  const centerY = 110;
-  const radius = 76;
-
-  const polygonPoints = values
-    .map((value, index) => {
-      const angle = -Math.PI / 2 + (index * Math.PI * 2) / values.length;
-      const pointRadius = (value / 100) * radius;
-      const x = centerX + Math.cos(angle) * pointRadius;
-      const y = centerY + Math.sin(angle) * pointRadius;
-
-      return `${x},${y}`;
-    })
-    .join(" ");
-
-  const axisLines = labels.map((label, index) => {
-    const angle = -Math.PI / 2 + (index * Math.PI * 2) / labels.length;
-    const x = centerX + Math.cos(angle) * radius;
-    const y = centerY + Math.sin(angle) * radius;
-    const labelX = centerX + Math.cos(angle) * (radius + 22);
-    const labelY = centerY + Math.sin(angle) * (radius + 16);
-
-    return (
-      <g key={label}>
-        <line x1={centerX} y1={centerY} x2={x} y2={y} />
-        <text x={labelX} y={labelY}>
-          {label}
-        </text>
-      </g>
-    );
-  });
-
-  const gridPolygons = [20, 40, 60, 80, 100].map((step) => {
-    const points = labels
-      .map((_, index) => {
-        const angle = -Math.PI / 2 + (index * Math.PI * 2) / labels.length;
-        const pointRadius = (step / 100) * radius;
-        const x = centerX + Math.cos(angle) * pointRadius;
-        const y = centerY + Math.sin(angle) * pointRadius;
-
-        return `${x},${y}`;
-      })
-      .join(" ");
-
-    return <polygon key={step} points={points} />;
-  });
-
-  return (
-    <svg
-      className="radar-svg"
-      viewBox="0 0 220 220"
-      role="img"
-      aria-label="Skill radar"
-    >
-      <g className="radar-grid">{gridPolygons}</g>
-      <g className="radar-axis">{axisLines}</g>
-      <polygon className="radar-shape" points={polygonPoints} />
-    </svg>
-  );
-}
 
 function ReportSidebar({ onNavigate }) {
   const itemClass = (item) =>
@@ -486,47 +172,83 @@ export default function CandidateReportPage() {
   const navigate = useNavigate();
 
   const [candidate, setCandidate] = useState(null);
+  const [candidateList, setCandidateList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const isListView = !id;
 
   useEffect(() => {
     let isMounted = true;
 
-    const loadCandidate = async () => {
+    const loadData = async () => {
       setLoading(true);
+      setError(null);
+
+      if (isListView) {
+        try {
+          const data = await jobsAPI.getAll({ pageNumber: 1 });
+          const jobs = Array.isArray(data) ? data : toArray(data);
+
+          const results = await Promise.all(
+            jobs.map((job) => applicationsAPI.getByJob(job.id).catch(() => [])),
+          );
+
+          const allApplications = results.flat();
+          const mappedCandidates = allApplications.map((app, idx) => ({
+            id: app.id ?? idx + 1,
+            candidateId: app.candidateId ?? app.candidate?.id ?? app.id,
+            name:
+              app.candidateName ??
+              app.candidate?.fullName ??
+              app.candidate?.name ??
+              "Candidate",
+            email: app.candidateEmail ?? app.candidate?.email ?? "",
+            jobTitle: app.jobTitle ?? app.job?.title ?? "",
+            matchScore: app.totalScore ?? app.matchScore ?? 0,
+            status: app.status ?? "Pending",
+          }));
+
+          const uniqueCandidates = [
+            ...new Map(
+              mappedCandidates.map((item) => [String(item.candidateId), item]),
+            ).values(),
+          ];
+
+          if (!isMounted) return;
+          setCandidateList(uniqueCandidates);
+        } catch (fetchError) {
+          console.error("Failed to load interviewed candidates", fetchError);
+          if (!isMounted) return;
+          setError("Unable to load HR interview candidate list.");
+          setCandidateList([]);
+        } finally {
+          if (isMounted) setLoading(false);
+        }
+
+        return;
+      }
 
       try {
         const fallbackCandidate =
           fallbackCandidates.find((item) => String(item.id) === String(id)) ||
           fallbackCandidates[0];
 
-        let profile = null;
+        const profile = await candidateAPI.getProfile(id).catch(() => null);
         let application = null;
-        let interview = null;
+
+        try {
+          const applicationsResponse = await applicationsAPI
+            .getByCandidate(id)
+            .catch(() => null);
+          const applications = toArray(applicationsResponse);
+          application = applications[0] || null;
+        } catch (applicationError) {
+          console.error("Failed to load application data", applicationError);
+        }
+
         let storedEvaluation = null;
         let storedReport = null;
-
-        if (id) {
-          profile = await candidateAPI.getProfile(id).catch(() => null);
-
-          try {
-            const applicationsResponse = await applicationsAPI
-              .getByCandidate(id)
-              .catch(() => null);
-            const applications = toArray(applicationsResponse);
-            application = applications[0] || null;
-
-            if (application?.id) {
-              interview = await hrInterviewAPI
-                .getByApplicationId(application.id)
-                .catch(() => null);
-            }
-          } catch (applicationError) {
-            console.error(
-              "Failed to load application/interview data",
-              applicationError,
-            );
-          }
-        }
 
         try {
           storedEvaluation = JSON.parse(
@@ -549,20 +271,22 @@ export default function CandidateReportPage() {
         const normalizedCandidate = normalizeCandidateReport({
           profile,
           application,
-          interview,
+          interview: null,
           storedEvaluation,
           storedReport,
           fallbackCandidate,
         });
 
         setCandidate(normalizedCandidate);
-      } catch (error) {
-        console.error(error);
+      } catch (fetchError) {
+        console.error(fetchError);
         if (!isMounted) return;
+        setError("Unable to load candidate report.");
 
         const fallbackCandidate =
           fallbackCandidates.find((item) => String(item.id) === String(id)) ||
           fallbackCandidates[0];
+
         setCandidate({
           ...fallbackCandidate,
           initials: fallbackCandidate?.initials || "CA",
@@ -570,25 +294,18 @@ export default function CandidateReportPage() {
           role: fallbackCandidate?.role || "Software Engineer",
           email: fallbackCandidate?.email || "",
           cv: fallbackCandidate?.cv ?? 88,
-          interview: fallbackCandidate?.interview ?? 85,
-          total: fallbackCandidate?.total ?? 89,
-          radar: fallbackRadar,
-          interviewAnalysis: fallbackInterviewAnalysis,
-          fairness:
-            fallbackCandidate?.fairness ||
-            "AI scoring dimensions passed fairness checks. Evaluation focused strictly on demonstrated skills and interview performance.",
         });
       } finally {
         if (isMounted) setLoading(false);
       }
     };
 
-    loadCandidate();
+    loadData();
 
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [id, isListView]);
 
   const fallbackCandidate =
     fallbackCandidates.find((item) => String(item.id) === String(id)) ||
@@ -617,43 +334,19 @@ export default function CandidateReportPage() {
     email: selectedCandidate?.email || "",
 
     cv: selectedCandidate?.cv ?? 88,
-    interview: selectedCandidate?.interview ?? 85,
-    total: selectedCandidate?.total ?? 89,
-
-    radar: selectedCandidate?.radar || fallbackRadar,
-
-    interviewAnalysis:
-      selectedCandidate?.interviewAnalysis || fallbackInterviewAnalysis,
-
-    fairness:
-      selectedCandidate?.fairness ||
-      "AI scoring dimensions passed fairness checks. Evaluation focused strictly on demonstrated skills and interview performance.",
   };
-
-  const radar = activeCandidate.radar || fallbackRadar;
-  const interviewAnalysis =
-    activeCandidate.interviewAnalysis || fallbackInterviewAnalysis;
 
   useEffect(() => {
     const previousTitle = document.title;
-    document.title = `${activeCandidate.name} Report`;
+    document.title = isListView
+      ? "HR Interview Reports"
+      : `${activeCandidate.name} Report`;
 
     return () => {
       document.title = previousTitle;
     };
-  }, [activeCandidate.name]);
+  }, [activeCandidate.name, isListView]);
 
-  const handleExportPdf = () => {
-    const previousTitle = document.title;
-    const exportTitle = `${activeCandidate.name.replace(/\s+/g, "-")}-Candidate-Report`;
-
-    document.title = exportTitle;
-    window.print();
-
-    window.setTimeout(() => {
-      document.title = previousTitle;
-    }, 300);
-  };
   if (loading) {
     return (
       <div className="report-page">
@@ -663,6 +356,7 @@ export default function CandidateReportPage() {
       </div>
     );
   }
+
   return (
     <div className="report-page">
       <ReportSidebar
@@ -682,95 +376,136 @@ export default function CandidateReportPage() {
               <button
                 type="button"
                 className="back-btn"
-                onClick={() => navigate("/hr-dashboard/candidates")}
+                onClick={() =>
+                  navigate(
+                    isListView ? "/hr-dashboard" : "/hr-dashboard/candidates",
+                  )
+                }
               >
-                Back to Candidates
+                {isListView ? "Back to Dashboard" : "Back to Candidates"}
               </button>
               <div>
-                <span className="report-eyebrow">Candidate insights</span>
-                <h1>Candidate Report</h1>
+                <span className="report-eyebrow">
+                  {isListView ? "HR reports" : "Candidate insights"}
+                </span>
+                <h1>
+                  {isListView ? "Interviewed Candidates" : "Candidate Report"}
+                </h1>
                 <p>
-                  Detailed AI-generated evaluation with technical and fairness
-                  signals.
+                  {isListView
+                    ? "Review all candidates who interviewed with HR and access each candidate's report from this list."
+                    : "This page shows the selected candidate's profile and CV score. Use the Candidates list to review all applicants for this role."}
                 </p>
               </div>
             </div>
-            <div className="report-header-actions">
-              <button
-                type="button"
-                className="export-btn"
-                onClick={handleExportPdf}
-              >
-                Export PDF
-              </button>
-            </div>
           </header>
 
-          <section className="report-summary-card">
-            <div className="report-profile">
-              <span className="report-avatar">{activeCandidate.initials}</span>
-              <div>
-                <h2>{activeCandidate.name}</h2>
-                <p>{activeCandidate.role}</p>
-                <small>{activeCandidate.email}</small>
+          {isListView ? (
+            <section className="report-card report-compact-card">
+              <div className="report-card-head">
+                <div>
+                  <span className="report-card-kicker">
+                    Interview candidates
+                  </span>
+                  <h3>All candidates reviewed by HR</h3>
+                </div>
               </div>
-            </div>
+              {error && <p className="report-error">{error}</p>}
+              {candidateList.length === 0 ? (
+                <p>No interviewed candidates found.</p>
+              ) : (
+                <div className="report-candidate-grid">
+                  {candidateList.map((item) => {
+                    const initials = item.name
+                      .split(" ")
+                      .filter(Boolean)
+                      .map((part) => part[0])
+                      .join("")
+                      .slice(0, 2)
+                      .toUpperCase();
 
-            <div className="report-score-grid">
-              {scoreCards.map((item) => (
-                <CircularScore
-                  key={item.key}
-                  value={activeCandidate[item.key]}
-                  label={item.label}
-                />
-              ))}
-            </div>
-          </section>
-
-          <section className="report-card">
-            <div className="report-card-head">
-              <div>
-                <span className="report-card-kicker">Capability map</span>
-                <h3>Skill Radar</h3>
+                    return (
+                      <article
+                        className="candidate-report-card"
+                        key={`${item.candidateId}-${item.id}`}
+                      >
+                        <div className="report-profile">
+                          <span className="report-avatar">{initials}</span>
+                          <div>
+                            <h3>{item.name}</h3>
+                            <p>{item.email}</p>
+                            {item.jobTitle && (
+                              <small>
+                                Applied for: <strong>{item.jobTitle}</strong>
+                              </small>
+                            )}
+                            <small className="report-status-tag">
+                              {item.status}
+                            </small>
+                          </div>
+                        </div>
+                        <div className="report-cv-score-card">
+                          <div className="report-cv-score-value">
+                            {item.matchScore}
+                            <span>%</span>
+                          </div>
+                          <div>
+                            <p className="report-cv-score-label">Match Score</p>
+                          </div>
+                        </div>
+                        <div className="report-card-actions">
+                          <Link
+                            to={`/hr-dashboard/reports/${item.candidateId}`}
+                            className="report-link-button"
+                          >
+                            View Report
+                          </Link>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          ) : (
+            <section className="report-card report-compact-card">
+              <div className="report-card-head">
+                <div>
+                  <span className="report-card-kicker">Candidate Summary</span>
+                  <h3>Profile & CV Score</h3>
+                </div>
               </div>
-            </div>
-            <div className="radar-wrap">
-              <RadarChart radar={radar} />
-            </div>
-          </section>
+              <p className="report-compact-note">
+                A short overview of the candidate and the CV fit score assigned
+                by the system.
+              </p>
 
-          <section className="report-card report-analysis-card">
-            <div className="report-card-head">
-              <div>
-                <span className="report-card-kicker">Communication review</span>
-                <h3>AI Interview Analysis</h3>
+              <div className="report-profile report-summary-compact">
+                <span className="report-avatar">
+                  {activeCandidate.initials}
+                </span>
+                <div>
+                  <h2>{activeCandidate.name}</h2>
+                  <p>{activeCandidate.role}</p>
+                  <small>{activeCandidate.email}</small>
+                </div>
               </div>
-            </div>
-            <div className="analysis-grid">
-              {interviewAnalysis.map((item) => (
-                <article key={item.title} className="analysis-item">
-                  <div className="analysis-head">
-                    <strong>{item.title}</strong>
-                    <span>{item.score}</span>
-                  </div>
-                  <p>{item.note}</p>
-                </article>
-              ))}
-            </div>
-          </section>
 
-          <section className="report-card">
-            <div className="report-card-head">
-              <div>
-                <span className="report-card-kicker">Evaluation integrity</span>
-                <h3>Fairness & Bias Assessment</h3>
+              <div className="report-cv-score-card">
+                <div className="report-cv-score-value">
+                  {activeCandidate.cv}
+                  <span>%</span>
+                </div>
+                <div>
+                  <p className="report-cv-score-label">CV Score</p>
+                  <p className="report-cv-score-note">
+                    A measure of the candidate's resume fit based on experience
+                    and profile relevance.
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="fairness-box">
-              <strong>No Bias Detected</strong>
-              <p>{activeCandidate.fairness}</p>
-            </div>
-          </section>
+            </section>
+          )}
         </div>
       </main>
     </div>

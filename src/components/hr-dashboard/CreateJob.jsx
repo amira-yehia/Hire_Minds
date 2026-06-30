@@ -29,6 +29,8 @@ export default function CreateJob() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [createdJobResponse, setCreatedJobResponse] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     Promise.all([companyAPI.getAll(), categoryAPI.getAll()])
@@ -61,6 +63,19 @@ export default function CreateJob() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleCopyResponse = async () => {
+    try {
+      await navigator.clipboard.writeText(
+        JSON.stringify(createdJobResponse, null, 2),
+      );
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2200);
+    } catch (err) {
+      console.warn("Copy failed", err);
+      setCopied(false);
+    }
+  };
+
   const toggleCategory = (id) => {
     setForm((prev) => ({
       ...prev,
@@ -86,7 +101,7 @@ export default function CreateJob() {
     setMessage("");
 
     try {
-      await jobsAPI.create({
+      const created = await jobsAPI.create({
         title: form.title,
         description: form.description,
         companyId: form.companyId,
@@ -98,15 +113,7 @@ export default function CreateJob() {
       });
 
       setMessage("Job created successfully!");
-      setForm({
-        title: "",
-        description: "",
-        companyId: "",
-        categories: [],
-        experienceLevel: "MidLevel",
-        employmentType: "FullTime",
-        status: 0,
-      });
+      setCreatedJobResponse(created);
     } catch (err) {
       setError(err.message || "Failed to create job. Please try again.");
     } finally {
@@ -283,7 +290,7 @@ export default function CreateJob() {
                 </div>
 
                 <button
-                  className="candidate-wide-button"
+                  className="create-job-btn"
                   type="submit"
                   disabled={loading}
                 >
@@ -294,6 +301,173 @@ export default function CreateJob() {
           </article>
         </section>
       </main>
+
+      {createdJobResponse && (
+        <div className="create-job-modal-mask">
+          <div className="create-job-modal">
+            <div className="create-job-modal-header">
+              <div>
+                <p className="modal-badge">Job Created</p>
+                <h2>Review create response</h2>
+              </div>
+              <button
+                type="button"
+                className="modal-close-button"
+                onClick={() => {
+                  setCreatedJobResponse(null);
+                  setCopied(false);
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <p className="modal-description">
+              This response is read-only. Copy it if you want to keep the
+              created job payload or close the overlay to continue editing.
+            </p>
+
+            <div className="create-job-modal-body">
+              <div className="modal-response-form">
+                <div className="modal-field">
+                  <label>Job title</label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={
+                      createdJobResponse?.title ||
+                      createdJobResponse?.Title ||
+                      "-"
+                    }
+                  />
+                </div>
+                <div className="modal-field">
+                  <label>Description</label>
+                  <textarea
+                    readOnly
+                    value={
+                      createdJobResponse?.description ||
+                      createdJobResponse?.Description ||
+                      "-"
+                    }
+                    rows={5}
+                  />
+                </div>
+                <div className="modal-field-row">
+                  <div className="modal-field">
+                    <label>Company</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={
+                        createdJobResponse?.companyName ||
+                        createdJobResponse?.company?.name ||
+                        createdJobResponse?.companyId ||
+                        createdJobResponse?.CompanyId ||
+                        "-"
+                      }
+                    />
+                  </div>
+                  <div className="modal-field">
+                    <label>Category IDs</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={
+                        Array.isArray(createdJobResponse?.categories)
+                          ? createdJobResponse.categories.join(", ")
+                          : Array.isArray(createdJobResponse?.Categories)
+                            ? createdJobResponse.Categories.join(", ")
+                            : "-"
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="modal-field-row">
+                  <div className="modal-field">
+                    <label>Experience level</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={
+                        createdJobResponse?.experienceLevel ||
+                        createdJobResponse?.ExperienceLevel ||
+                        "-"
+                      }
+                    />
+                  </div>
+                  <div className="modal-field">
+                    <label>Employment type</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={
+                        createdJobResponse?.employmentType ||
+                        createdJobResponse?.EmploymentType ||
+                        "-"
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="modal-field-row">
+                  <div className="modal-field">
+                    <label>Threshold</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={
+                        createdJobResponse?.threshold ??
+                        createdJobResponse?.Threshold ??
+                        "-"
+                      }
+                    />
+                  </div>
+                  <div className="modal-field">
+                    <label>Status</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={
+                        createdJobResponse?.status ??
+                        createdJobResponse?.Status ??
+                        "-"
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="modal-field">
+                  <label>Full API response</label>
+                  <textarea
+                    readOnly
+                    value={JSON.stringify(createdJobResponse, null, 2)}
+                    rows={10}
+                  />
+                </div>
+
+                <div className="create-job-modal-actions">
+                  <button
+                    type="button"
+                    className="copy-response-btn"
+                    onClick={handleCopyResponse}
+                  >
+                    {copied ? "Copied to clipboard" : "Copy response"}
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    onClick={() => {
+                      setCreatedJobResponse(null);
+                      setCopied(false);
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
