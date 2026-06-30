@@ -45,6 +45,11 @@ export default function CandidateSidebar() {
           <span>My Profile</span>
         </NavLink>
 
+        <NavLink to="/candidate/applications">
+          <i className="bx bx-briefcase"></i>
+          <span>My Applications</span>
+        </NavLink>
+
         <NavLink to="/candidate/interview">
           <i className="bx bx-chat"></i>
           <span>AI Interview</span>

@@ -6,6 +6,7 @@ import ProtectedRoute from "./ProtectedRoute";
 
 import CandidateProfile from "./CandidateProfile";
 import CandidateDashboard from "./CandidateDashboard";
+import CandidateApplicationsPage from "./CandidateApplicationsPage";
 
 import CandidateInterview from "./CandidateInterview";
 import CandidateReportPage from "./hr-dashboard/CandidateReportPage";
@@ -73,8 +74,23 @@ export default function App() {
         }
       />
       <Route
+        path="/candidate/applications"
+        element={
+          <ProtectedRoute allowedRoles={["candidate"]}>
+            <CandidateApplicationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/hr-dashboard/reports"
+        element={
+          <ProtectedRoute allowedRoles={["recruiter"]}>
+            <CandidateReportPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/hr-dashboard/reports/:id"
-        // element={<CandidateReportPage />}
         element={
           <ProtectedRoute allowedRoles={["recruiter"]}>
             <CandidateReportPage />

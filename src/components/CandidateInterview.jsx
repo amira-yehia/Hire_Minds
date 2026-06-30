@@ -7,7 +7,7 @@ import { aiInterviewAPI, getSession } from "../api";
 
 export default function CandidateInterview() {
   const navigate = useNavigate();
-  const [phase, setPhase] = useState("verify");
+  const [phase, setPhase] = useState("intro");
   const [sessionId, setSessionId] = useState(null);
   const [websocketUrl, setWebsocketUrl] = useState(null);
   const [durationSeconds, setDurationSeconds] = useState(1800); // ✅ هيتعدل من السيرفر
@@ -67,7 +67,44 @@ export default function CandidateInterview() {
     setPhase("completed");
   };
 
-  // ── Step 1: Face Verification ──────────────────────────────
+  const handleVerified = async () => {
+    await prepareInterview();
+  };
+
+  // ── Step 1: Intro / Start ─────────────────────────────────
+  if (phase === "intro") {
+    return (
+      <div className="candidate-shell">
+        <CandidateSidebar />
+        <main className="candidate-main">
+          <header className="candidate-topbar">
+            <div>
+              <h1>AI Interview</h1>
+              <p>Start your interview and complete identity verification.</p>
+            </div>
+          </header>
+          <section className="candidate-view">
+            <article className="candidate-profile-card">
+              <h2>Ready to Begin</h2>
+              <p>
+                We’ll start with a quick camera check, then your interview will
+                begin automatically.
+              </p>
+              <button
+                className="candidate-wide-button"
+                onClick={() => setPhase("verify")}
+                style={{ marginTop: "1.5rem" }}
+              >
+                Begin Interview
+              </button>
+            </article>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  // ── Step 2: Face Verification ──────────────────────────────
   if (phase === "verify") {
     return (
       <div className="candidate-shell">
@@ -76,54 +113,11 @@ export default function CandidateInterview() {
           <header className="candidate-topbar">
             <div>
               <h1>AI Interview</h1>
-              <p>Step 1 of 2 — Identity Verification</p>
+              <p>Camera check before your interview starts</p>
             </div>
           </header>
           <section className="candidate-view">
-            <FaceVerify onVerified={() => setPhase("ready")} />
-          </section>
-        </main>
-      </div>
-    );
-  }
-
-  // ── Step 2: Ready to Start ─────────────────────────────────
-  if (phase === "ready") {
-    return (
-      <div className="candidate-shell">
-        <CandidateSidebar />
-        <main className="candidate-main">
-          <header className="candidate-topbar">
-            <div>
-              <h1>AI Interview</h1>
-              <p>Step 2 of 2 — Start Interview</p>
-            </div>
-          </header>
-          <section className="candidate-view">
-            <article className="candidate-profile-card">
-              <p
-                style={{
-                  color: "#16a34a",
-                  fontWeight: 600,
-                  marginBottom: "1rem",
-                }}
-              >
-                ✅ Identity verified successfully!
-              </p>
-              <h2>Ready to Start</h2>
-              <p>
-                Microphone access is required. Make sure you're in a quiet
-                environment.
-              </p>
-              <button
-                className="candidate-wide-button"
-                onClick={prepareInterview}
-                disabled={loading}
-                style={{ marginTop: "1.5rem" }}
-              >
-                {loading ? "Preparing Interview…" : "Start Interview"}
-              </button>
-            </article>
+            <FaceVerify onVerified={handleVerified} />
           </section>
         </main>
       </div>

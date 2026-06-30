@@ -47,6 +47,32 @@ export default function CandidateDashboard() {
 
     interviewCompleted: localStorage.getItem(`interview-${userId}`) === "true",
   };
+
+  const progressSteps = [
+    { icon: "bx-check", title: "Profile", subtitle: "Created", status: "done" },
+    {
+      icon: "bx-file",
+      title: "CV",
+      subtitle: "Uploaded",
+      status: progress.cvUploaded ? "done" : "",
+    },
+    {
+      icon: "bx-message-square",
+      title: "AI",
+      subtitle: "Interview",
+      status: progress.interviewCompleted
+        ? "done"
+        : progress.cvUploaded
+          ? "active"
+          : "",
+    },
+    {
+      icon: "bx-time-five",
+      title: "Final",
+      subtitle: "Review",
+      status: progress.interviewCompleted ? "active" : "",
+    },
+  ];
   if (loading) {
     return (
       <div className="candidate-shell">
@@ -80,41 +106,16 @@ export default function CandidateDashboard() {
           <div className="candidate-progress-card">
             <h2>Application Progress</h2>
             <div className="candidate-progress-track">
-              {[
-                ["bx-check", "Profile", "Created", "done"],
-
-                [
-                  "bx-file",
-                  "CV",
-                  "Uploaded",
-                  progress.cvUploaded ? "done" : "",
-                ],
-
-                [
-                  "bx-message-square",
-                  "AI",
-                  "Interview",
-                  progress.interviewCompleted
-                    ? "done"
-                    : progress.cvUploaded
-                      ? "active"
-                      : "",
-                ],
-
-                [
-                  "bx-time-five",
-                  "Final",
-                  "Review",
-                  progress.interviewCompleted ? "active" : "",
-                ],
-              ].map(([icon, title, subtitle, status], index) => (
-                <div className="candidate-progress-item" key={title}>
-                  <span className={`candidate-step-dot ${status}`}>
-                    <i className={`bx ${icon}`}></i>
+              {progressSteps.map((step, index) => (
+                <div className="candidate-progress-item" key={step.title}>
+                  <span className={`candidate-step-dot ${step.status}`}>
+                    <i className={`bx ${step.icon}`}></i>
                   </span>
-                  {index < 4 && <span className="candidate-step-line"></span>}
-                  <strong>{title}</strong>
-                  <small>{subtitle}</small>
+                  {index < progressSteps.length - 1 && (
+                    <span className="candidate-step-line"></span>
+                  )}
+                  <strong>{step.title}</strong>
+                  <small>{step.subtitle}</small>
                 </div>
               ))}
             </div>

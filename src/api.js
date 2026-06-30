@@ -207,6 +207,9 @@ export const applicationsAPI = {
 
   /** All applications for a job */
   getByJob: (jobId) => request("GET", `/api/Applications/job/${jobId}`),
+
+  /** Remove an application. Uses a best-effort DELETE call. */
+  remove: (applicationId) => request("DELETE", `/api/Applications/${applicationId}`),
 };
 
 // ================================================================

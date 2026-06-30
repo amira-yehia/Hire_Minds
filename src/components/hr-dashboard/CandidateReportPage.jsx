@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { candidateAPI } from "../../api";
+import {
+  applicationsAPI,
+  candidateAPI,
+  hrInterviewAPI,
+  toArray,
+} from "../../api";
+import { candidates as fallbackCandidates } from "./candidatesData";
 import "./CandidateReportPage.css";
 
 const fallbackRadar = {
@@ -11,18 +17,6 @@ const fallbackRadar = {
   "System Design": 79,
   Algorithms: 83,
 };
-
-const fallbackCodingResults = [
-  { label: "Two Sum", value: 88 },
-  { label: "API Cache", value: 84 },
-  { label: "Merge K Lists", value: 86 },
-];
-
-const fallbackCodingSummary = [
-  { label: "Correctness", value: "91%" },
-  { label: "Efficiency", value: "84%" },
-  { label: "Languages Used", value: "2" },
-];
 
 const fallbackInterviewAnalysis = [
   {
@@ -49,10 +43,299 @@ const fallbackInterviewAnalysis = [
 
 const scoreCards = [
   { key: "cv", label: "CV Score" },
-  { key: "code", label: "Code Score" },
   { key: "interview", label: "Interview" },
   { key: "total", label: "Total Score" },
 ];
+
+const pickValue = (source, paths = []) => {
+  if (!source || typeof source !== "object") return undefined;
+
+  for (const path of paths) {
+    if (!path) continue;
+
+    const value = path.split(".").reduce((acc, part) => {
+      if (acc == null || acc === undefined) return undefined;
+      return acc[part];
+    }, source);
+
+    if (value !== undefined && value !== null && value !== "") {
+      return value;
+    }
+  }
+
+  return undefined;
+};
+
+const toNumber = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+};
+
+const normalizeRadar = (source) => {
+  const direct = pickValue(source, [
+    "radar",
+    "skillScores",
+    "skillBreakdown",
+    "competencies",
+    "metrics",
+    "scores",
+  ]);
+
+  if (direct && typeof direct === "object" && !Array.isArray(direct)) {
+    const normalized = Object.entries(direct).reduce((acc, [label, value]) => {
+      const parsed = toNumber(value?.score ?? value?.value ?? value);
+      if (parsed != null) {
+        acc[label] = Math.max(0, Math.min(100, parsed));
+      }
+      return acc;
+    }, {});
+
+    if (Object.keys(normalized).length) return normalized;
+  }
+
+  const arraySource = Array.isArray(direct) ? direct : [];
+  const fromArray = arraySource.reduce((acc, item) => {
+    const label = pickValue(item, [
+      "label",
+      "name",
+      "title",
+      "dimension",
+      "skill",
+    ]);
+    const value = toNumber(
+      pickValue(item, ["score", "value", "rating", "points"]),
+    );
+    if (label && value != null) {
+      acc[label] = Math.max(0, Math.min(100, value));
+    }
+    return acc;
+  }, {});
+
+  if (Object.keys(fromArray).length) return fromArray;
+
+  return fallbackRadar;
+};
+
+const normalizeInterviewAnalysis = (source) => {
+  const candidates = [
+    source?.interviewAnalysis,
+    source?.analysis,
+    source?.evaluation?.analysis,
+    source?.evaluation?.dimensions,
+    source?.report?.analysis,
+    source?.insights,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) {
+      const items = candidate
+        .map((item) => {
+          if (!item || typeof item !== "object") return null;
+          const title = pickValue(item, [
+            "title",
+            "name",
+            "label",
+            "dimension",
+          ]);
+          const score = pickValue(item, ["score", "value", "rating"]);
+          const note = pickValue(item, [
+            "note",
+            "summary",
+            "description",
+            "insight",
+          ]);
+
+          if (!title) return null;
+
+          return {
+            title,
+            score: score ?? "—",
+            note:
+              note || "Assessment generated from the latest interview session.",
+          };
+        })
+        .filter(Boolean);
+
+      if (items.length) return items;
+    }
+
+    if (
+      candidate &&
+      typeof candidate === "object" &&
+      !Array.isArray(candidate)
+    ) {
+      const items = Object.entries(candidate)
+        .map(([title, value]) => {
+          if (typeof value === "object" && value !== null) {
+            const score = pickValue(value, ["score", "value", "rating"]);
+            const note = pickValue(value, [
+              "note",
+              "summary",
+              "description",
+              "insight",
+            ]);
+            return {
+              title,
+              score: score ?? "—",
+              note:
+                note ||
+                "Assessment generated from the latest interview session.",
+            };
+          }
+
+          return {
+            title,
+            score: value ?? "—",
+            note: "Assessment generated from the latest interview session.",
+          };
+        })
+        .filter((item) => item && item.title);
+
+      if (items.length) return items;
+    }
+  }
+
+  return fallbackInterviewAnalysis;
+};
+
+const normalizeCandidateReport = ({
+  profile,
+  application,
+  interview,
+  storedEvaluation,
+  storedReport,
+  fallbackCandidate,
+}) => {
+  const source = profile && typeof profile === "object" ? profile : {};
+  const applicationSource =
+    application && typeof application === "object" ? application : {};
+  const interviewSource =
+    interview && typeof interview === "object" ? interview : {};
+  const evaluationSource =
+    storedEvaluation && typeof storedEvaluation === "object"
+      ? storedEvaluation
+      : {};
+  const reportSource =
+    storedReport && typeof storedReport === "object" ? storedReport : {};
+
+  const fullName =
+    pickValue(source, [
+      "fullName",
+      "name",
+      "candidateName",
+      "displayName",
+      "firstName",
+    ]) ||
+    fallbackCandidate?.name ||
+    "Candidate";
+
+  const initials =
+    pickValue(source, ["initials"]) ||
+    fullName
+      .split(" ")
+      .filter(Boolean)
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() ||
+    fallbackCandidate?.initials ||
+    "CA";
+
+  const role =
+    pickValue(source, [
+      "jobTitle",
+      "role",
+      "position",
+      "seniorityLevel",
+      "title",
+    ]) ||
+    fallbackCandidate?.role ||
+    "Software Engineer";
+
+  const email =
+    pickValue(source, ["email", "emailAddress"]) ||
+    fallbackCandidate?.email ||
+    "";
+
+  const cvScore =
+    toNumber(pickValue(source, ["cvScore", "cv", "cvScorePercentage"])) ??
+    toNumber(
+      pickValue(applicationSource, ["cvScore", "cv", "cvScorePercentage"]),
+    ) ??
+    fallbackCandidate?.cv ??
+    88;
+
+  const interviewScore =
+    toNumber(
+      pickValue(interviewSource, ["interviewScore", "score", "overallScore"]),
+    ) ??
+    toNumber(
+      pickValue(evaluationSource, ["interviewScore", "score", "overallScore"]),
+    ) ??
+    toNumber(
+      pickValue(reportSource, ["interviewScore", "score", "overallScore"]),
+    ) ??
+    fallbackCandidate?.interview ??
+    85;
+
+  const totalScore =
+    toNumber(
+      pickValue(source, ["totalScore", "overallScore", "compositeScore"]),
+    ) ??
+    toNumber(
+      pickValue(applicationSource, [
+        "totalScore",
+        "overallScore",
+        "compositeScore",
+      ]),
+    ) ??
+    Math.round((cvScore + interviewScore) / 2) ??
+    fallbackCandidate?.total ??
+    89;
+
+  const radar = normalizeRadar({
+    ...source,
+    ...interviewSource,
+    ...evaluationSource,
+    ...reportSource,
+  });
+
+  const analysis = normalizeInterviewAnalysis({
+    ...source,
+    ...interviewSource,
+    ...evaluationSource,
+    ...reportSource,
+  });
+
+  const fairness =
+    pickValue(interviewSource, [
+      "fairness",
+      "fairnessText",
+      "biasAssessment",
+    ]) ||
+    pickValue(evaluationSource, [
+      "fairness",
+      "fairnessText",
+      "biasAssessment",
+    ]) ||
+    pickValue(reportSource, ["fairness", "fairnessText", "biasAssessment"]) ||
+    pickValue(source, ["fairness"]) ||
+    fallbackCandidate?.fairness ||
+    "AI scoring dimensions passed fairness checks. Evaluation focused strictly on demonstrated skills and interview performance.";
+
+  return {
+    initials,
+    name: fullName,
+    role,
+    email,
+    cv: cvScore,
+    interview: interviewScore,
+    total: totalScore,
+    radar,
+    interviewAnalysis: analysis,
+    fairness,
+  };
+};
 
 function CircularScore({ value, label }) {
   const progress = Math.max(0, Math.min(100, value));
@@ -206,47 +489,148 @@ export default function CandidateReportPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    candidateAPI
-      .getProfile(id)
-      .then(setCandidate)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    let isMounted = true;
+
+    const loadCandidate = async () => {
+      setLoading(true);
+
+      try {
+        const fallbackCandidate =
+          fallbackCandidates.find((item) => String(item.id) === String(id)) ||
+          fallbackCandidates[0];
+
+        let profile = null;
+        let application = null;
+        let interview = null;
+        let storedEvaluation = null;
+        let storedReport = null;
+
+        if (id) {
+          profile = await candidateAPI.getProfile(id).catch(() => null);
+
+          try {
+            const applicationsResponse = await applicationsAPI
+              .getByCandidate(id)
+              .catch(() => null);
+            const applications = toArray(applicationsResponse);
+            application = applications[0] || null;
+
+            if (application?.id) {
+              interview = await hrInterviewAPI
+                .getByApplicationId(application.id)
+                .catch(() => null);
+            }
+          } catch (applicationError) {
+            console.error(
+              "Failed to load application/interview data",
+              applicationError,
+            );
+          }
+        }
+
+        try {
+          storedEvaluation = JSON.parse(
+            localStorage.getItem("interviewEvaluation") || "null",
+          );
+        } catch (error) {
+          console.error("Invalid interviewEvaluation in local storage", error);
+        }
+
+        try {
+          storedReport = JSON.parse(
+            localStorage.getItem("interviewReport") || "null",
+          );
+        } catch (error) {
+          console.error("Invalid interviewReport in local storage", error);
+        }
+
+        if (!isMounted) return;
+
+        const normalizedCandidate = normalizeCandidateReport({
+          profile,
+          application,
+          interview,
+          storedEvaluation,
+          storedReport,
+          fallbackCandidate,
+        });
+
+        setCandidate(normalizedCandidate);
+      } catch (error) {
+        console.error(error);
+        if (!isMounted) return;
+
+        const fallbackCandidate =
+          fallbackCandidates.find((item) => String(item.id) === String(id)) ||
+          fallbackCandidates[0];
+        setCandidate({
+          ...fallbackCandidate,
+          initials: fallbackCandidate?.initials || "CA",
+          name: fallbackCandidate?.name || "Candidate",
+          role: fallbackCandidate?.role || "Software Engineer",
+          email: fallbackCandidate?.email || "",
+          cv: fallbackCandidate?.cv ?? 88,
+          interview: fallbackCandidate?.interview ?? 85,
+          total: fallbackCandidate?.total ?? 89,
+          radar: fallbackRadar,
+          interviewAnalysis: fallbackInterviewAnalysis,
+          fairness:
+            fallbackCandidate?.fairness ||
+            "AI scoring dimensions passed fairness checks. Evaluation focused strictly on demonstrated skills and interview performance.",
+        });
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    loadCandidate();
+
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
+
+  const fallbackCandidate =
+    fallbackCandidates.find((item) => String(item.id) === String(id)) ||
+    fallbackCandidates[0];
+
+  const selectedCandidate = candidate || fallbackCandidate;
+
   const activeCandidate = {
     initials:
-      candidate?.fullName
+      selectedCandidate?.initials ||
+      selectedCandidate?.fullName
         ?.split(" ")
         .map((n) => n[0])
         .join("")
         .slice(0, 2)
-        .toUpperCase() || "CA",
+        .toUpperCase() ||
+      "CA",
 
-    name: candidate?.fullName || "Candidate",
+    name: selectedCandidate?.name || selectedCandidate?.fullName || "Candidate",
 
-    role: candidate?.seniorityLevel || "Software Engineer",
+    role:
+      selectedCandidate?.role ||
+      selectedCandidate?.seniorityLevel ||
+      "Software Engineer",
 
-    email: candidate?.email || "",
+    email: selectedCandidate?.email || "",
 
-    cv: 88,
-    code: 92,
-    interview: 85,
-    total: 89,
+    cv: selectedCandidate?.cv ?? 88,
+    interview: selectedCandidate?.interview ?? 85,
+    total: selectedCandidate?.total ?? 89,
 
-    radar: fallbackRadar,
+    radar: selectedCandidate?.radar || fallbackRadar,
 
-    codingResults: fallbackCodingResults,
-
-    codingSummary: fallbackCodingSummary,
-
-    interviewAnalysis: fallbackInterviewAnalysis,
+    interviewAnalysis:
+      selectedCandidate?.interviewAnalysis || fallbackInterviewAnalysis,
 
     fairness:
+      selectedCandidate?.fairness ||
       "AI scoring dimensions passed fairness checks. Evaluation focused strictly on demonstrated skills and interview performance.",
   };
 
   const radar = activeCandidate.radar || fallbackRadar;
-  const codingResults = activeCandidate.codingResults || fallbackCodingResults;
-  const codingSummary = activeCandidate.codingSummary || fallbackCodingSummary;
   const interviewAnalysis =
     activeCandidate.interviewAnalysis || fallbackInterviewAnalysis;
 
@@ -343,53 +727,16 @@ export default function CandidateReportPage() {
             </div>
           </section>
 
-          <section className="report-two-column">
-            <article className="report-card">
-              <div className="report-card-head">
-                <div>
-                  <span className="report-card-kicker">Capability map</span>
-                  <h3>Skill Radar</h3>
-                </div>
+          <section className="report-card">
+            <div className="report-card-head">
+              <div>
+                <span className="report-card-kicker">Capability map</span>
+                <h3>Skill Radar</h3>
               </div>
-              <div className="radar-wrap">
-                <RadarChart radar={radar} />
-              </div>
-            </article>
-
-            <article className="report-card">
-              <div className="report-card-head">
-                <div>
-                  <span className="report-card-kicker">
-                    Technical assessment
-                  </span>
-                  <h3>Coding Assessment Results</h3>
-                </div>
-              </div>
-              <div className="coding-bars">
-                {codingResults.map((item) => (
-                  <div key={item.label} className="coding-row">
-                    <div className="coding-row-head">
-                      <span>{item.label}</span>
-                    </div>
-                    <div className="coding-track">
-                      <div
-                        className="coding-fill"
-                        style={{ width: `${Math.max(8, item.value)}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="coding-stats">
-                {codingSummary.map((item) => (
-                  <div key={item.label}>
-                    <strong>{item.value}</strong>
-                    <span>{item.label}</span>
-                  </div>
-                ))}
-              </div>
-            </article>
+            </div>
+            <div className="radar-wrap">
+              <RadarChart radar={radar} />
+            </div>
           </section>
 
           <section className="report-card report-analysis-card">

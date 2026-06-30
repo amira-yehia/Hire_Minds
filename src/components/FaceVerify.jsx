@@ -153,7 +153,9 @@ export default function FaceVerify({
         }}
       >
         <h2>Identity Verification</h2>
-        <p>Look straight at the camera and click Verify.</p>
+        <p>
+          Look straight at the camera and click verify to start the interview.
+        </p>
         {cameraError ? (
           <p style={{ color: "red" }}>{cameraError}</p>
         ) : (
@@ -166,7 +168,7 @@ export default function FaceVerify({
           />
         )}
         {status === "success" && (
-          <p style={{ color: "#16a34a" }}>✅ Verified! Redirecting…</p>
+          <p style={{ color: "#16a34a" }}>✅ Verified! Starting interview…</p>
         )}
         {status === "error" && <p style={{ color: "red" }}>{errorMsg}</p>}
         {status !== "success" && (
