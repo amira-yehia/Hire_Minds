@@ -146,20 +146,60 @@ export default function CandidateProfile() {
   };
 
   // ── Start Face Enrollment ─────────────────────────────────────
+  // const startFaceEnrollment = async () => {
+  //   setFaceError("");
+  //   setFaceSamples([]);
+  //   try {
+  //     const session = await faceAPI.enrollStart();
+  //     // setFaceSessionId(session?.sessionId || session?.id || session);
+  //     console.log(session);
+
+  //     setFaceSessionId(
+  //       session.sessionId || session.id || session.data?.sessionId,
+  //     );
+  //     setFaceStep("enrolling");
+  //     await startCamera();
+  //   } catch (err) {
+  //     setFaceError(err.message || "Could not start face enrollment.");
+  //     setFaceStep("error");
+  //   }
+  // };
   const startFaceEnrollment = async () => {
-    setFaceError("");
-    setFaceSamples([]);
     try {
+      // const session = await faceAPI.enrollStart();
+
+      // console.log("ENROLL START RESPONSE:", session);
+
+      // const sid = session.sessionId || session.id || session.data?.sessionId;
+      // const sid =
+      //   session.session_id ||
+      //   session.sessionId ||
+      //   session.id ||
+      //   session.data?.session_id ||
+      //   session.data?.sessionId;
+
+      // console.log("SESSION =", sid);
+
+      // setFaceSessionId(sid);
+
+      // console.log("SESSION ID =", sid);
+
+      // setFaceSessionId(sid);
+      console.log("TOKEN =", localStorage.getItem("accessToken"));
+      console.log("USER =", localStorage.getItem("userId"));
       const session = await faceAPI.enrollStart();
-      setFaceSessionId(session?.sessionId || session?.id || session);
+
+      console.log(session);
+
+      setFaceSessionId(session.session_id);
       setFaceStep("enrolling");
       await startCamera();
     } catch (err) {
-      setFaceError(err.message || "Could not start face enrollment.");
+      console.error("ENROLL START ERROR:", err);
+      setFaceError(JSON.stringify(err));
       setFaceStep("error");
     }
   };
-
   // ── Capture Frame ─────────────────────────────────────────────
   const captureFrame = async () => {
     const video = videoRef.current;
@@ -175,6 +215,7 @@ export default function CandidateProfile() {
         if (!blob) return;
         const file = new File([blob], "face.jpg", { type: "image/jpeg" });
         try {
+          console.log("FACE SESSION =", faceSessionId);
           await faceAPI.enrollFrame(faceSessionId, file);
           const next = [...faceSamples, Date.now()];
           setFaceSamples(next);
@@ -535,11 +576,12 @@ export default function CandidateProfile() {
                 <button
                   onClick={resetFace}
                   style={{
-                    fontSize: 12,
+                    fontSize: "12px",
+                    color: "#111827",
                     padding: "4px 10px",
                     borderRadius: 6,
                     border: "1px solid #e5e7eb",
-                    background: "none",
+                    background: "#fff",
                     cursor: "pointer",
                   }}
                 >

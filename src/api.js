@@ -209,48 +209,84 @@ export const applicationsAPI = {
   getByJob: (jobId) => request("GET", `/api/Applications/job/${jobId}`),
 
   /** Remove an application. Uses a best-effort DELETE call. */
-  remove: (applicationId) => request("DELETE", `/api/Applications/${applicationId}`),
+  remove: (applicationId) =>
+    request("DELETE", `/api/Applications/${applicationId}`),
 };
 
+// // ================================================================
+// // JOBS  →  /api/jobs
+// // ================================================================
+// export const jobsAPI = {
+//   /** Create a new job */
+//   create: (data) => request("POST", "/api/jobs", data),
+
+//   /**
+//    * Filter/search jobs — Swagger says PUT /api/jobs with a body (JobQueryParametersDto).
+//    * Pass an object; omit fields to use defaults.
+//    */
+//   getAll: (params = {}) =>
+//     request("PUT", "/api/jobs", {
+//       pageNumber: params.pageNumber ?? 1,
+//       sortBy: params.sortBy ?? "",
+//       sortOrder: params.sortOrder ?? "",
+//       search: params.search ?? "",
+//       location: params.location ?? "",
+//       company: params.company ?? "",
+//       status: params.status ?? "",
+//       employmentType: params.employmentType ?? "",
+//       experienceLevel: params.experienceLevel ?? "",
+//       postedAfter: params.postedAfter ?? null,
+//     }),
+
+//   getById: (id) => request("GET", `/api/jobs/${id}`),
+
+//   /** Update a specific job by id */
+//   update: (id, data) => request("PUT", `/api/jobs/${id}`, data),
+
+//   delete: (id) => request("DELETE", `/api/jobs/${id}`),
+
+//   /**
+//    * Approve/reject a job — PUT /api/jobs/approve
+//    * Used by Admin to enrich & approve a job post.
+//    */
+//   approve: (data) => request("PUT", "/api/jobs/approve", data),
+// };
 // ================================================================
-// JOBS  →  /api/jobs
+// JOBS → /api/jobs
 // ================================================================
 export const jobsAPI = {
-  /** Create a new job */
   create: (data) => request("POST", "/api/jobs", data),
+  approve: (data) => request("PUT", "/api/jobs/approve", data),
+  getAll: () => request("GET", "/api/jobs"),
 
-  /**
-   * Filter/search jobs — Swagger says PUT /api/jobs with a body (JobQueryParametersDto).
-   * Pass an object; omit fields to use defaults.
-   */
-  getAll: (params = {}) =>
-    request("PUT", "/api/jobs", {
-      pageNumber: params.pageNumber ?? 1,
-      sortBy: params.sortBy ?? "",
-      sortOrder: params.sortOrder ?? "",
-      search: params.search ?? "",
-      location: params.location ?? "",
-      company: params.company ?? "",
-      status: params.status ?? "",
-      employmentType: params.employmentType ?? "",
-      experienceLevel: params.experienceLevel ?? "",
-      postedAfter: params.postedAfter ?? null,
-    }),
+  getRecruiterJobs: () => request("GET", "/api/jobs/Recruiter_jobs"),
 
-  getById: (id) => request("GET", `/api/jobs/${id}`),
+  getCandidateJobs: () => request("GET", "/api/jobs/candidate_jobs"),
 
-  /** Update a specific job by id */
   update: (id, data) => request("PUT", `/api/jobs/${id}`, data),
 
   delete: (id) => request("DELETE", `/api/jobs/${id}`),
-
-  /**
-   * Approve/reject a job — PUT /api/jobs/approve
-   * Used by Admin to enrich & approve a job post.
-   */
-  approve: (data) => request("PUT", "/api/jobs/approve", data),
 };
 
+// export const jobsAPI = {
+//   // إنشاء وظيفة
+//   create: (data) => request("POST", "/api/jobs", data),
+
+//   // جلب كل الوظائف
+//   getAll: () => request("GET", "/api/jobs"),
+
+//   // جلب وظيفة واحدة
+//   getById: (id) => request("GET", `/api/jobs/${id}`),
+
+//   // تعديل وظيفة
+//   update: (id, data) => request("PUT", `/api/jobs/${id}`, data),
+
+//   // حذف وظيفة
+//   delete: (id) => request("DELETE", `/api/jobs/${id}`),
+
+//   // الموافقة على وظيفة
+//   approve: (data) => request("PUT", "/api/jobs/approve", data),
+// };
 // ================================================================
 // RECRUITERS  →  /api/recruiters
 // ================================================================
@@ -312,7 +348,29 @@ export const skillAPI = {
 // ================================================================
 
 export const faceAPI = {
-  enrollStart: () => request("POST", "/Api/FaceRecognition/EnrollStart"),
+  // enrollStart: () => request("POST", "/Api/FaceRecognition/EnrollStart"),
+  enrollStart: async () => {
+    const response = await fetch(
+      `${BASE_URL}/Api/FaceRecognition/EnrollStart`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      },
+    );
+
+    const text = await response.text();
+
+    console.log("STATUS:", response.status);
+    console.log("BODY:", text);
+
+    if (!response.ok) {
+      throw new Error(text);
+    }
+
+    return JSON.parse(text);
+  },
 
   enrollFrame: async (sessionId, file) => {
     const formData = new FormData();
@@ -330,7 +388,9 @@ export const faceAPI = {
     );
 
     if (!response.ok) {
-      throw new Error("Enroll frame failed");
+      const txt = await response.text();
+      console.log("ENROLL ERROR:", txt);
+      throw new Error(txt);
     }
 
     return await response.json();
@@ -345,7 +405,8 @@ export const faceAPI = {
   verify: async (file) => {
     const formData = new FormData();
     formData.append("frame", file);
-
+    console.log("REQUEST:", `${BASE_URL}${path}`);
+    console.log("TOKEN:", getToken());
     const response = await fetch(`${BASE_URL}/Api/FaceRecognition/Verify`, {
       method: "POST",
       headers: {
@@ -355,7 +416,9 @@ export const faceAPI = {
     });
 
     if (!response.ok) {
-      throw new Error("Verification failed");
+      const txt = await response.text();
+      console.log("VERIFY ERROR:", txt);
+      throw new Error(txt);
     }
 
     return await response.json();

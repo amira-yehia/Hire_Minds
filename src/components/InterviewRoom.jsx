@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import useInterviewSocket from "../hooks/useInterviewSocket";
-import { aiInterviewAPI } from "../api";
+import { aiInterviewAPI, faceAPI } from "../api";
 
 // ── Timer helper ──────────────────────────────────────────────
 function useTimer(durationSeconds) {
   const [timeLeft, setTimeLeft] = useState(durationSeconds);
   const intervalRef = useRef(null);
-
   useEffect(() => {
     // لو الـ duration اتغير (جه من السيرفر) نريسيت الـ timer
     setTimeLeft(durationSeconds);
@@ -52,12 +51,15 @@ export default function InterviewRoom({
   const [recording, setRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [status, setStatus] = useState("Connecting to AI…");
+  const [warnings, setWarnings] = useState(0);
 
   const chatEndRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   const recognitionRef = useRef(null);
-
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
   // Auto-scroll
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -101,7 +103,83 @@ export default function InterviewRoom({
     recognitionRef.current = recognition;
     return () => recognition.stop();
   }, []);
+  useEffect(() => {
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
 
+        streamRef.current = stream;
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    startCamera();
+
+    return () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        if (!videoRef.current || !canvasRef.current) return;
+
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        if (!video.videoWidth || !video.videoHeight) return;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        canvas.getContext("2d").drawImage(video, 0, 0);
+
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+
+          try {
+            const file = new File([blob], "verify.jpg", {
+              type: "image/jpeg",
+            });
+
+            const result = await faceAPI.verify(file);
+
+            console.log("FACE CHECK", result);
+
+            if (!result?.success) {
+              setWarnings((prev) => {
+                const next = prev + 1;
+
+                console.log("Face Warning:", next);
+
+                if (next >= 3) {
+                  alert(
+                    "Face verification failed multiple times. Interview terminated.",
+                  );
+
+                  endSession();
+                  onFinish?.();
+                }
+
+                return next;
+              });
+            }
+          } catch (err) {
+            console.error("Face verification error:", err);
+          }
+        }, "image/jpeg");
+      } catch (e) {
+        console.error(e);
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [endSession, onFinish]);
   const startRecording = async () => {
     setTranscript("");
     try {
@@ -255,7 +333,25 @@ export default function InterviewRoom({
           <span className={`status-dot ${connected ? "online" : "offline"}`} />
           {status}
         </div>
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          style={{
+            width: 1,
+            height: 1,
+            position: "absolute",
+            opacity: 0,
+          }}
+        />
 
+        <canvas
+          ref={canvasRef}
+          style={{
+            display: "none",
+          }}
+        />
         <button className="candidate-send-button" onClick={handleFinish}>
           Finish
         </button>

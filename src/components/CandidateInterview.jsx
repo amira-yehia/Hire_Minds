@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import CandidateSidebar from "./CandidateSidebar";
 import InterviewRoom from "./InterviewRoom";
@@ -12,7 +12,41 @@ export default function CandidateInterview() {
   const [websocketUrl, setWebsocketUrl] = useState(null);
   const [durationSeconds, setDurationSeconds] = useState(1800); // ✅ هيتعدل من السيرفر
   const [loading, setLoading] = useState(false);
+  // useEffect(() => {
+  //   const interval = setInterval(async () => {
+  //     if (!videoRef.current || !canvasRef.current) return;
 
+  //     const canvas = canvasRef.current;
+  //     const video = videoRef.current;
+
+  //     canvas.width = video.videoWidth;
+  //     canvas.height = video.videoHeight;
+
+  //     canvas.getContext("2d").drawImage(video, 0, 0);
+
+  //     canvas.toBlob(async (blob) => {
+  //       if (!blob) return;
+
+  //       const file = new File([blob], "check.jpg", {
+  //         type: "image/jpeg",
+  //       });
+
+  //       try {
+  //         const result = await faceAPI.verify(file);
+
+  //         console.log("FACE CHECK:", result);
+
+  //         if (!result?.success) {
+  //           console.log("Candidate not verified");
+  //         }
+  //       } catch (e) {
+  //         console.error("Face verification failed", e);
+  //       }
+  //     }, "image/jpeg");
+  //   }, 10000);
+
+  //   return () => clearInterval(interval);
+  // }, []);
   const prepareInterview = async () => {
     try {
       setLoading(true);

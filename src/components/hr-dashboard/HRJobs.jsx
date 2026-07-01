@@ -99,7 +99,11 @@ export default function HRJobs() {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const data = await jobsAPI.getAll({ pageNumber: 1 });
+      const data = await jobsAPI.getRecruiterJobs();
+      console.log("Recruiter Jobs:", data);
+      console.log(JSON.stringify(data, null, 2));
+      // const data = await jobsAPI.getAll();
+      // const data = await jobsAPI.getAll({ pageNumber: 1 });
       // setJobs(Array.isArray(data) ? data : (data?.items ?? []));
       const toArray = (res) => {
         if (!res) return [];
