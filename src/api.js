@@ -26,8 +26,13 @@ async function request(method, path, body = null, isFormData = false) {
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(err.message || "Request failed");
+    const text = await res.text();
+
+    console.error("BACKEND RESPONSE:", text);
+    console.error("STATUS:", res.status);
+    console.error("URL:", `${BASE_URL}${path}`);
+
+    throw new Error(text || "Request failed");
   }
 
   const text = await res.text();
@@ -251,21 +256,33 @@ export const applicationsAPI = {
 //    */
 //   approve: (data) => request("PUT", "/api/jobs/approve", data),
 // };
-// ================================================================
-// JOBS → /api/jobs
-// ================================================================
+// =============================
+// Jobs API
+// =============================
 export const jobsAPI = {
+  // Create Job
   create: (data) => request("POST", "/api/jobs", data),
-  approve: (data) => request("PUT", "/api/jobs/approve", data),
+
+  // Get all jobs
   getAll: () => request("GET", "/api/jobs"),
 
-  getRecruiterJobs: () => request("GET", "/api/jobs/Recruiter_jobs"),
+  // Get job by id
+  getById: (id) => request("GET", `/api/jobs/${id}`),
 
-  getCandidateJobs: () => request("GET", "/api/jobs/candidate_jobs"),
-
+  // Update job
   update: (id, data) => request("PUT", `/api/jobs/${id}`, data),
 
+  // Delete job
+  remove: (id) => request("DELETE", `/api/jobs/${id}`),
   delete: (id) => request("DELETE", `/api/jobs/${id}`),
+  // Recruiter jobs
+  getRecruiterJobs: () => request("GET", "/api/jobs/Recruiter_jobs"),
+
+  // Candidate jobs
+  getCandidateJobs: () => request("GET", "/api/jobs/candidate_jobs"),
+
+  // Approve job
+  approve: (data) => request("POST", "/api/jobs/approve", data),
 };
 
 // export const jobsAPI = {

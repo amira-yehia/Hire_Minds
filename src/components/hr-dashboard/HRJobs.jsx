@@ -123,31 +123,135 @@ export default function HRJobs() {
   };
 
   useEffect(() => {
-    fetchJobs();
+    loadJobs();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this job?")) return;
+  const loadJobs = async () => {
     try {
-      await jobsAPI.delete(id);
-      setJobs((prev) => prev.filter((j) => j.id !== id));
+      setLoading(true);
+
+      const data = await jobsAPI.getRecruiterJobs();
+
+      console.log("RECRUITER JOBS =", data);
+
+      setJobs(Array.isArray(data) ? data : []);
     } catch (err) {
-      alert(err.message || "Failed to delete job.");
+      console.error("FULL ERROR:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
+  // const handleDelete = async (id) => {
+  //   if (!window.confirm("Delete this job?")) return;
+  //   try {
+  //     await jobsAPI.delete(id);
+  //     setJobs((prev) => prev.filter((j) => j.id !== id));
+  //   } catch (err) {
+  //     alert(err.message || "Failed to delete job.");
+  //   }
+  // };
+  // const handleDelete = async (id) => {
+  //   if (!window.confirm("Delete this job?")) return;
+
+  //   try {
+  //     await jobsAPI.remove(id);
+
+  //     setJobs((prev) => prev.filter((job) => job.id !== id));
+
+  //     alert("Job deleted successfully");
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert(err.message);
+  //   }
+  // };
+  const handleDelete = async (jobId) => {
+    const job = jobs.find((j) => j.id === jobId);
+
+    console.log("JOB =", job);
+    console.log("ID =", job?.id);
+    console.log("COMPANY =", job?.companyId);
+    console.log("RECRUITER =", job?.recruiterId);
+    try {
+      console.log("DELETE JOB =", jobId);
+
+      await jobsAPI.delete(jobId);
+
+      setJobs((prev) => prev.filter((job) => job.id !== jobId));
+
+      alert("Job deleted successfully");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete job");
+    }
+  };
+  // const handleDelete = async (job) => {
+  //   console.log("DELETE JOB =", job);
+
+  //   try {
+  //     await jobsAPI.delete(job.id);
+  //     setJobs((prev) => prev.filter((j) => j.id !== job.id));
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
+  // const handleEditSave = async () => {
+  //   try {
+  //     await jobsAPI.update(editJob.id, {
+  //       title: editJob.title,
+  //       description: editJob.description,
+  //       categories: editJob.categories ?? [],
+  //       status: editJob.status,
+  //     });
+  //     setEditJob(null);
+  //     await fetchJobs();
+  //   } catch (err) {
+  //     alert(err.message || "Failed to update job.");
+  //   }
+  // };
   const handleEditSave = async () => {
     try {
-      await jobsAPI.update(editJob.id, {
+      const payload = {
         title: editJob.title,
         description: editJob.description,
-        categories: editJob.categories ?? [],
+        companyId: editJob.companyId,
+        categories: editJob.categories || [],
+        experienceLevel: editJob.experienceLevel,
+        employmentType: editJob.employmentType,
         status: editJob.status,
-      });
-      setEditJob(null);
-      await fetchJobs();
+      };
+
+      console.log("UPDATE PAYLOAD", payload);
+
+      await jobsAPI.update(editJob.id, payload);
+
+      alert("Job updated successfully");
+
+      setJobs((prev) =>
+        prev.map((j) => (j.id === editJob.id ? { ...j, ...payload } : j)),
+      );
+
+      setEditJob(null); // ✅ الصح
     } catch (err) {
-      alert(err.message || "Failed to update job.");
+      console.error(err);
+      alert("Failed to update job");
+    }
+  };
+  const handleUpdate = async (id, formData) => {
+    try {
+      await jobsAPI.update(id, {
+        title: formData.title,
+        description: formData.description,
+        categories: formData.categories,
+        status: formData.status,
+      });
+
+      alert("Job updated successfully");
+      loadJobs();
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
     }
   };
 

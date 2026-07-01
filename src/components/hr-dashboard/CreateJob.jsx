@@ -81,8 +81,8 @@ export default function CreateJob() {
     description: form.description,
     companyId: form.companyId,
     categories: form.categories,
-    experienceLevel: form.experienceLevel,
-    employmentType: form.employmentType,
+    experienceLevel: form.experienceLevel.toLowerCase(),
+    employmentType: form.employmentType.toLowerCase(),
     threshold: form.threshold,
     status: form.status,
   });
@@ -109,28 +109,23 @@ export default function CreateJob() {
       return;
     }
 
-    setLoading(true);
-    setError("");
-    setMessage("");
-
     try {
+      setLoading(true);
+      setError("");
+      setMessage("");
+
       const payload = {
         title: form.title,
         description: form.description,
-        companyId: form.companyId,
+        companyId: form.companyId, // مهم
         categories: form.categories,
-        experienceLevel: form.experienceLevel,
-        employmentType: form.employmentType,
-        threshold: form.threshold,
-        status: form.status,
+        experienceLevel: form.experienceLevel.toLowerCase(),
+        employmentType: form.employmentType.toLowerCase(),
+        threshold: Number(form.threshold),
+        status: 0,
       };
+      console.log("CREATE PAYLOAD", JSON.stringify(payload, null, 2));
 
-      console.log("PAYLOAD:", payload);
-
-      // await jobsAPI.create(payload);
-
-      // setMessage("Job created successfully!");
-      // navigate("/hr-dashboard/jobs");
       const created = await jobsAPI.create(payload);
 
       console.log("CREATED:", created);
@@ -145,89 +140,115 @@ export default function CreateJob() {
 
       setMessage("Job created successfully. Click Publish to approve it.");
     } catch (err) {
+      console.error(err);
       setError(err.message || "Failed to create job.");
     } finally {
       setLoading(false);
     }
   };
 
+  // const handleApprove = async () => {
+  //   try {
+  //     const approvePayload = {
+  //       jobId: createdJobResponse.jobId,
+  //       description: form.description,
+  //       categories: form.categories,
+
+  //       status: 1, // مش 0
+
+  //       threshold: Number(form.threshold),
+
+  //       companyId: form.companyId,
+
+  //       jobTitle: form.title,
+
+  //       requiredSkills: form.categories,
+  //       preferredSkills: [],
+
+  //       yearsOfExperience: 1,
+
+  //       seniorityLevel:
+  //         form.experienceLevel === "MidLevel"
+  //           ? "MidLevel"
+  //           : form.experienceLevel,
+
+  //       educationRequirements: [],
+
+  //       responsibilities: form.description,
+
+  //       message: "Approved",
+  //     };
+
+  //     console.log("APPROVE ID =", createdJobResponse.jobId);
+  //     console.log("TYPE =", typeof createdJobResponse.jobId);
+
+  //     await jobsAPI.approve(createdJobResponse.jobId, approvePayload);
+
+  //     // await jobsAPI.approve(approvePayload);
+  //     // await jobsAPI.approve(job.jobId, approvePayload);
+  //     alert("Job approved and published successfully");
+  //     console.log("ID =", job.jobId);
+  //     console.log("TYPE =", typeof job.jobId);
+  //     setCreatedJobResponse(null);
+  //     navigate("/hr-dashboard/jobs");
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert(err.message || "Failed to approve job");
+  //   }
+  // };
   const handleApprove = async () => {
     try {
-      // const approvePayload = {
-      //   jobId: createdJobResponse.jobId,
+      if (!createdJobResponse?.jobId) {
+        alert("No job found to approve.");
+        return;
+      }
 
-      //   description: form.description,
-
-      //   categories: form.categories,
-
-      //   status: 0,
-
-      //   threshold: Number(form.threshold),
-
-      //   companyId: form.companyId,
-
-      //   jobTitle: form.title,
-
-      //   requiredSkills: form.categories,
-
-      //   preferredSkills: [],
-
-      //   yearsOfExperience: 0,
-
-      //   seniorityLevel:
-      //     form.experienceLevel === "MidLevel" ? "Mid" : form.experienceLevel,
-
-      //   educationRequirements: [],
-
-      //   responsibilities: form.description,
-
-      //   message: "Approved",
-      // };
       const approvePayload = {
         jobId: createdJobResponse.jobId,
-
         description: form.description,
-
-        categories: [],
+        categories: form.categories,
 
         status: 1,
 
-        threshold: 70,
+        threshold: Number(form.threshold),
 
         companyId: form.companyId,
 
         jobTitle: form.title,
 
-        requiredSkills: [],
-
+        requiredSkills: form.categories,
         preferredSkills: [],
 
-        yearsOfExperience: 0,
+        yearsOfExperience: 1,
 
-        seniorityLevel: "Mid",
+        seniorityLevel:
+          form.experienceLevel === "MidLevel"
+            ? "MidLevel"
+            : form.experienceLevel,
 
         educationRequirements: [],
 
-        responsibilities: "",
+        responsibilities: form.description,
 
-        message: "",
+        message: "Approved",
       };
-      console.log(
-        "categories:",
-        form.categories,
-        form.categories.map((c) => c.length),
-      );
-      console.log("APPROVE JSON", JSON.stringify(approvePayload, null, 2));
+
+      console.log("APPROVE PAYLOAD:", JSON.stringify(approvePayload, null, 2));
+
+      console.log("APPROVE ID:", createdJobResponse.jobId);
+      console.log("TYPE:", typeof createdJobResponse.jobId);
 
       await jobsAPI.approve(approvePayload);
 
       alert("Job approved and published successfully");
 
       setCreatedJobResponse(null);
+
       navigate("/hr-dashboard/jobs");
     } catch (err) {
-      console.error(err);
-      alert(err.message || "Failed to approve job");
+      console.error("APPROVE ERROR:", err);
+
+      alert(err?.message || "Failed to approve job");
     }
   };
   const selectStyle = {
